@@ -1,0 +1,17 @@
+# Kibana Container Resource Requests
+
+- op: replace
+  path: /spec/podTemplate/spec/containers/0/resources/requests/cpu
+  value: 2
+
+- op: replace
+  path: /spec/podTemplate/spec/containers/0/resources/requests/memory
+  value: "4Gi"
+
+- op: replace
+  path: /spec/podTemplate/spec/containers/0/resources/limits/cpu
+  value: 4
+
+- op: replace
+  path: /spec/podTemplate/spec/containers/0/resources/limits/memory
+  value: "8Gi"

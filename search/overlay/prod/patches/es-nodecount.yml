@@ -1,0 +1,5 @@
+# Elasticsearch Node Count
+
+- op: replace
+  path: /spec/nodeSets/0/count
+  value: 3

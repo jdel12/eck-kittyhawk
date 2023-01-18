@@ -1,0 +1,123 @@
+---
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: elasticsearch
+spec:
+  version: 8.4.2
+  monitoring:
+    metrics:
+      elasticsearchRefs:
+      - name: elasticsearch
+    logs:
+      elasticsearchRefs:
+      - name: elasticsearch
+  nodeSets:
+  - name: hot
+    count: 2
+    config:
+      node.roles: ["master", "data_hot", "data_content", "ingest", "transform"]
+      xpack.security.audit.enabled: false
+      xpack.security.audit.logfile.events.emit_request_body: true
+    podTemplate:
+      spec:
+        initContainers:
+        - name: sysctl
+          securityContext:
+            privileged: true
+            runAsUser: 0
+          command: ['sh', '-c', 'sysctl -w vm.max_map_count=262144']
+        containers:
+        - name: elasticsearch
+          env:
+          - name: ES_JAVA_OPTS
+            value: -Xms2g -Xmx2g
+          resources:
+            requests:
+              memory: 2Gi
+              cpu: 2
+            limits:
+              cpu: 4
+              memory: 4Gi
+    volumeClaimTemplates:
+    - metadata:
+        name: elasticsearch-data # Do not change this name unless you set up a volume mount for the data path.
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 5Gi
+        storageClassName: standard
+  - name: cold
+    count: 1
+    config:
+      node.roles: ["master", "data_cold", "data_content", "transform"]
+      xpack.security.audit.enabled: false
+      xpack.security.audit.logfile.events.emit_request_body: true
+    podTemplate:
+      spec:
+        initContainers:
+        - name: sysctl
+          securityContext:
+            privileged: true
+            runAsUser: 0
+          command: ['sh', '-c', 'sysctl -w vm.max_map_count=262144']
+        containers:
+        - name: elasticsearch
+          env:
+          - name: ES_JAVA_OPTS
+            value: -Xms2g -Xmx2g
+          resources:
+            requests:
+              memory: 2Gi
+              cpu: 2
+            limits:
+              cpu: 4
+              memory: 4Gi
+    volumeClaimTemplates:
+    - metadata:
+        name: elasticsearch-data # Do not change this name unless you set up a volume mount for the data path.
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 5Gi
+        storageClassName: standard
+  - name: frozen
+    count: 1
+    config:
+      node.roles: ["data_frozen"]
+      xpack.security.audit.enabled: false
+      xpack.security.audit.logfile.events.emit_request_body: true
+    podTemplate:
+      spec:
+        initContainers:
+        - name: sysctl
+          securityContext:
+            privileged: true
+            runAsUser: 0
+          command: ['sh', '-c', 'sysctl -w vm.max_map_count=262144']
+        containers:
+        - name: elasticsearch
+          env:
+          - name: ES_JAVA_OPTS
+            value: -Xms2g -Xmx2g
+          resources:
+            requests:
+              memory: 2Gi
+              cpu: 2
+            limits:
+              cpu: 4
+              memory: 4Gi
+    volumeClaimTemplates:
+    - metadata:
+        name: elasticsearch-data # Do not change this name unless you set up a volume mount for the data path.
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 5Gi
+        storageClassName: standard

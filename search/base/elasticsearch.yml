@@ -1,0 +1,57 @@
+---
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: elasticsearch
+spec:
+  version: 8.4.2
+  monitoring:
+    metrics:
+      elasticsearchRefs:
+      - name: elasticsearch
+    logs:
+      elasticsearchRefs:
+      - name: elasticsearch
+  nodeSets:
+  - name: main
+    count: 2
+    config:
+      xpack.security.audit.enabled: false
+      xpack.security.audit.logfile.events.emit_request_body: true
+    podTemplate:
+      spec:
+        initContainers:
+        - name: sysctl
+          securityContext:
+            privileged: true
+            runAsUser: 0
+          command: ['sh', '-c', 'sysctl -w vm.max_map_count=262144']
+        containers:
+        - name: elasticsearch
+          env:
+          - name: ES_JAVA_OPTS
+            value: -Xms2g -Xmx2g
+          resources:
+            requests:
+              memory: 2Gi
+              cpu: 2
+            limits:
+              cpu: 4
+              memory: 4Gi
+          volumeMounts:
+          - name: synonyms
+            mountPath: /usr/share/elasticsearch/config/dictionaries
+        volumes:
+        - name: synonyms
+          configMap:
+            name: synonym-cm
+    volumeClaimTemplates:
+    - metadata:
+        name: elasticsearch-data # Do not change this name unless you set up a volume mount for the data path.
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 5Gi
+        storageClassName: standard

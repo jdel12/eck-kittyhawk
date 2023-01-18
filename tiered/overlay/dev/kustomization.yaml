@@ -1,0 +1,84 @@
+bases: 
+  - ../../base
+
+patches:
+# whole cluster setings
+  - path: ./patches/all-version.yml
+    target: 
+      kind: Elasticsearch
+      name: elasticsearch
+  - path: ./patches/all-version.yml
+    target: 
+      kind: Kibana
+      name: kibana
+  - path: ./patches/all-version.yml
+    target: 
+      kind: ApmServer
+      name: apm-server
+  # - path: ./patches/all-namespace.yml
+  #   target: 
+  #     kind: Elasticsearch
+  #     name: elasticsearch
+  # - path: ./patches/all-namespace.yml
+  #   target: 
+  #     kind: Kibana
+  #     name: kibana
+  # - path: ./patches/all-namespace.yml
+  #   target: 
+  #     kind: ApmServer
+  #     name: apm-server
+  # - path: ./patches/all-namespace.yml
+  #   target: 
+  #     kind: Agent
+  #     name: fleet-server
+  # - path: ./patches/all-namespace.yml
+  #   target: 
+  #     kind: Agent
+  #     name: elastic-agent
+  # - path: ./patches/all-namespace.yml
+  #   target: 
+  #     kind: ClusterRoleBinding
+  #     name: fleet-server
+  # - path: ./patches/all-namespace.yml
+  #   target: 
+  #     kind: ClusterRoleBinding
+  #     name: elastic-agent
+  # - path: ./patches/all-namespace.yml
+  #   target: 
+  #     kind: ClusterRole
+  #     name: fleet-server
+  # - path: ./patches/all-namespace.yml
+  #   target: 
+  #     kind: ClusterRole
+  #     name: elastic-agent
+# elasticsearch settings
+  - path: ./patches/es-computeresources.yml
+    target: 
+      kind: Elasticsearch
+      name: elasticsearch
+  - path: ./patches/es-nodecount.yml
+    target: 
+      kind: Elasticsearch
+      name: elasticsearch
+  - path: ./patches/es-storagesize.yml
+    target: 
+      kind: Elasticsearch
+      name: elasticsearch
+# kibana settings
+  - path: ./patches/kb-computeresources.yml
+    target: 
+      kind: Kibana
+      name: kibana
+  - path: ./patches/kb-nodecount.yml
+    target: 
+      kind: Kibana
+      name: kibana
+# optional fleet settings
+  # - path: ./patches/all-version.yml
+  #   target: 
+  #     kind: Agent
+  #     name: elastic-agent
+  # - path: ./patches/all-version.yml
+  #   target: 
+  #     kind: Agent
+  #     name: fleet-server

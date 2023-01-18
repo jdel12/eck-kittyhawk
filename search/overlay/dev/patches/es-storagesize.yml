@@ -1,0 +1,9 @@
+# Elasticsearch Nodes Storage Size and Class
+
+- op: replace
+  path: /spec/nodeSets/0/volumeClaimTemplates/0/spec/resources/requests/storage
+  value: "10Gi"
+
+- op: replace
+  path: /spec/nodeSets/0/volumeClaimTemplates/0/spec/storageClassName
+  value: "standard"

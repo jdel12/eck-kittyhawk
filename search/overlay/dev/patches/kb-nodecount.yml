@@ -1,0 +1,5 @@
+# Kibana Node Count
+
+- op: replace
+  path: /spec/count
+  value: 1

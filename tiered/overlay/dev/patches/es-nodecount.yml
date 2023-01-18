@@ -1,0 +1,17 @@
+# Hot Node Count
+
+- op: replace
+  path: /spec/nodeSets/0/count
+  value: 2
+
+# Cold Node Count
+
+- op: replace
+  path: /spec/nodeSets/1/count
+  value: 1
+
+# Frozen Node Count
+
+- op: replace
+  path: /spec/nodeSets/2/count
+  value: 1

@@ -1,0 +1,31 @@
+---
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: elasticsearch
+spec:
+  version: 8.4.2
+  monitoring:
+    metrics:
+      elasticsearchRefs:
+      - name: elasticsearch
+    logs:
+      elasticsearchRefs:
+      - name: elasticsearch
+  nodeSets:
+  - name: main
+    count: 2
+    podTemplate:
+      spec:
+        initContainers:
+        - name: sysctl
+          securityContext:
+            privileged: true
+            runAsUser: 0
+          command: ['sh', '-c', 'sysctl -w vm.max_map_count=262144']
+        volumes:
+        - name: elasticsearch-data
+          emptyDir: {}
+    config:
+      xpack.security.audit.enabled: false
+      node.store.allow_mmap: false

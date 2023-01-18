@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: synonym-cm
+data:
+  synonym: |-
+    test,exam
+    snap,break
+    politics,dissapointing

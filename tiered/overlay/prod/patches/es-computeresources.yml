@@ -1,0 +1,71 @@
+# Hot Elasticsearch Container Resource Requests
+
+- op: replace
+  path: /spec/nodeSets/0/podTemplate/spec/containers/0/resources/requests/cpu
+  value: 12
+
+- op: replace
+  path: /spec/nodeSets/0/podTemplate/spec/containers/0/resources/requests/memory
+  value: "64Gi"
+
+- op: replace
+  path: /spec/nodeSets/0/podTemplate/spec/containers/0/resources/limits/cpu
+  value: 14
+
+- op: replace
+  path: /spec/nodeSets/0/podTemplate/spec/containers/0/resources/limits/memory
+  value: "64Gi"
+
+- op: replace
+  path: /spec/nodeSets/0/podTemplate/spec/containers/0/env/0
+  value:
+    name: ES_JAVA_OPTS
+    value: "-Xms30g -Xmx30g"
+
+# Cold Elasticsearch Container Resource Requests
+
+- op: replace
+  path: /spec/nodeSets/1/podTemplate/spec/containers/0/resources/requests/cpu
+  value: 8
+
+- op: replace
+  path: /spec/nodeSets/1/podTemplate/spec/containers/0/resources/requests/memory
+  value: "64Gi"
+
+- op: replace
+  path: /spec/nodeSets/1/podTemplate/spec/containers/0/resources/limits/cpu
+  value: 12
+
+- op: replace
+  path: /spec/nodeSets/1/podTemplate/spec/containers/0/resources/limits/memory
+  value: "64Gi"
+
+- op: replace
+  path: /spec/nodeSets/1/podTemplate/spec/containers/0/env/0
+  value:
+    name: ES_JAVA_OPTS
+    value: "-Xms30g -Xmx30g"
+
+# Frozen Elasticsearch Container Resource Requests
+
+- op: replace
+  path: /spec/nodeSets/2/podTemplate/spec/containers/0/resources/requests/cpu
+  value: 4
+
+- op: replace
+  path: /spec/nodeSets/2/podTemplate/spec/containers/0/resources/requests/memory
+  value: "64Gi"
+
+- op: replace
+  path: /spec/nodeSets/2/podTemplate/spec/containers/0/resources/limits/cpu
+  value: 8
+
+- op: replace
+  path: /spec/nodeSets/2/podTemplate/spec/containers/0/resources/limits/memory
+  value: "64Gi"
+
+- op: replace
+  path: /spec/nodeSets/2/podTemplate/spec/containers/0/env/0
+  value:
+    name: ES_JAVA_OPTS
+    value: "-Xms30g -Xmx30g"

@@ -1,0 +1,6 @@
+resources:
+  - elasticsearch.yml
+  - kibana.yml
+  - legacy-apmserver.yml
+  - trial-license.yml
+  - fleet.yml
