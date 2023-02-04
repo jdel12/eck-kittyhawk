@@ -1,8 +1,8 @@
 # Hydrated Quickstart
 
-I've always been frustrated with tutorials and quickstarts that show you how to draw stick figures and then follow that up with the Sistene Chappel so this is my attempt to give out some more formulated examples that hopefully help you get some air under your wings with some `Kustomize` mixed in and the ability to shape it as needed from there. 
+I've always been frustrated with tutorials and quickstarts that show you how to draw stick figures and then follow that up with the Sistene Chappel so this is my attempt to provide a couple of examples to bridge the gap between the two and hopefully they will help you get some air under your wings so you can get started quickly and focus on shaping things from there. 
 
-For now, there are three examples; an ephemeral quickstart cluster, a generic three node (search) cluster, a tiered storage cluster. These are by no means the only way, the singular best way, or anything more than a more complete starting point than a basic quickstart cluster and one you can tinker and learn from. Each cluster will have some things different about it and each will have it's own readme file to explain those differences further.
+For now, there are three examples; an ephemeral quickstart cluster, a generic three node (search) cluster, and a tiered storage cluster. These are by no means the only way, the singular best way to build ECK clusters but it is an attempt to provide a more complete starting point than a basic quickstart cluster. Each cluster will have some things different about it and each will have it's own readme file to explain those differences further.
 
 
 ## Initial Setup of ECK Operator

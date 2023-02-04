@@ -15,46 +15,48 @@ flowchart LR
 
 ## Deployable Assets in this Directory
 
-| Elastic Cluster | Resource | Count | Filename | Features Added |
+| Elastic Cluster | Filename |  Resource (Kind) | Count | Features Added |
 | :-------------: |:-------------:| :-------------: | :-------------: | :-------------: |
-|main|Elasticsearch|2|elasticsearch.yml|[Virtual Memory](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html), [Persistent Storage](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-volume-claim-templates.html), [Compute Resources](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-managing-compute-resources.html), [Custom Configuration Files (Synonyms)](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-bundles-plugins.html), [Elastic Audit Settings](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s_audit_logging.html), [Internal Monitoring](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-stack-monitoring.html)|
-|main|Kibana|1|kibana.yml|[Kibana APM Self Monitoring](https://www.elastic.co/guide/en/kibana/current/kibana-debugging.html), [Compute Resources](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-kibana-advanced-configuration.html)|
-|main|[RBAC Roles](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)||rbac.yml|Kubernetes RBAC for Agents, Fleet|
-|ECK-Wide|Secret:[License](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-licensing.html)||trial-license.yml|Trial License to Enable All Features|
-|_optional_|Fleet Server(Agent)|1|fleet.yml|[Fleet](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-elastic-agent-fleet.html), [APM Integration](https://www.elastic.co/guide/en/apm/guide/current/upgrade-to-apm-integration.html) |
-|_optional_|[Agents](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-elastic-agent-fleet-configuration-examples.html)|1+n|fleet.yml|[System](https://docs.elastic.co/en/integrations/system), [Kubernetes](https://docs.elastic.co/integrations/kubernetes), [Cloud Security Posture](https://docs.elastic.co/integrations/cloud_security_posture), [Endoint](https://docs.elastic.co/integrations/endpoint)|
+|main|elasticsearch.yml|Elasticsearch|2|[Virtual Memory](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html), [Persistent Storage](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-volume-claim-templates.html), [Compute Resources](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-managing-compute-resources.html), [Custom Configuration Files (Synonyms)](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-bundles-plugins.html), [Elastic Audit Settings](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s_audit_logging.html), [Internal Monitoring](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-stack-monitoring.html)|
+|main|kibana.yml|Kibana|1|[Kibana APM Self Monitoring](https://www.elastic.co/guide/en/kibana/current/kibana-debugging.html), [Compute Resources](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-kibana-advanced-configuration.html)|
+|main|rbac.yml|[RBAC Roles](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)||Kubernetes RBAC for Agents, Fleet|
+|ECK-Wide|trial-license.yml|Secret:[License](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-licensing.html)||Trial License to Enable All Features|
+|_optional_|fleet.yml|Fleet Server(Agent)|1|[Fleet](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-elastic-agent-fleet.html), [APM Integration](https://www.elastic.co/guide/en/apm/guide/current/upgrade-to-apm-integration.html) |
+|_optional_|fleet.yml|[Agents](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-elastic-agent-fleet-configuration-examples.html)|1+n|[System](https://docs.elastic.co/en/integrations/system), [Kubernetes](https://docs.elastic.co/integrations/kubernetes)|
 
 
 ---
 
 ## Search Cluster
 
-We have taken our previous quickstart cluster, added persistent storage with a custom synonyms file to make a relatively straightforward 2-3 node Elasticsearch cluster.  The table above should reflect the assets being deployed and documentation references to the added features and settings. You can deploy the yamls in the base directory flat and as is. 
+We have taken our previous quickstart cluster but made a few additions like persistent storage and a custom synonyms file to make a relatively straightforward 2-3 node Elasticsearch cluster.  The table above should reflect the assets being deployed and documentation references to the added features and settings. You can deploy the yamls in the base directory flat and as is with a normal kubectl command. 
 
-The overlay directory has a `dev` and `prod` directory and by using a tool that is built into every kubectl command line, we can do some simple templating by environment and "overlay" the values appropriately.  The outcome is hopefully that you can maintain a core base yaml with changes to say resources, version, or node counts reflected across different environments. You are by no means forced to use this and can generate a template and just use the output. 
+`kubectl apply -f elasticsearch.yml -f kibana.yml -f synonyms-configmap.yml -f legacy-apmserver.yml -f trial-license.yml`
+
+However, next to the base directory is the overlay directory which has  `dev` and `prod` subdirectories.  By using a tool called `Kustomize` that is built into every kubectl command line, we can do some simple templating by environment and "overlay" the values appropriately.  The goal is that in lieu of your own preferred strategy, this should be a low depency method to build out and maintain a core base yaml set with various overlays making changes to say resources, version, or node counts. You are by no means forced to use this and can generate a template and just use the output. 
 
 You can also optionally deploy Agents with Fleet by following the instructions further down the page.
 
-> NOTE: You may also install it separately and this might be a more current version than the packaged one with the kubectl tool - consider this if you see different funcitonality between users). 
+> NOTE: You may also install `Kustomize` into your CLI separately and this often is a more current version than the packaged one with the kubectl tool - consider this if you see different funcitonality). 
 
 
 ## Kustomize Instrucitons
 
 `kubectl kustomize` or `kubectl kustomize build` will generate a templated set of YAMLs when run in the right place and in this case, either the `dev` or `prod` sub-directories under `overlay`.
 
-The way it works is that in your terminal, you place yourself in one of the the overlay directories, either dev or prod (baseline also works as flat yamls), and run a command similar to the one above.   Each directory's kustomizaton.yaml file will reference where it pulls the base YAML files from (our base directory) and then changes (patches) to be "overlayed" on top of them; things like compute settings or node counts are typically larger in the production.  The chart below shows some of the differences between each environment. These are generic use case starter values and I would encourage you to iteratively test or engage with Elastic Professional Services etc. to gauge these if you aren't sure.  You can edit any of the values for dev or prod in the `kustomization.yaml` file in each and/or the patches directory.  
+The way it works is that in your terminal, place yourself in one of the the overlay subdirectories, either dev or prod, and run a command similar to the examples below.  Each directory's kustomizaton.yaml file will reference where it pulls the base YAML files from (our base directory) and then changes (patches) to be "overlayed" on top of them; things like compute settings or node counts are typically larger in the production.  The `Base Values` chart below shows some of the differences between each environment. These are generic use case starter values and I would encourage you to iteratively test or engage with Elastic Professional Services etc. to gauge these if you aren't sure.  You can edit any of the values for dev or prod in the `kustomization.yaml` file in each and/or the patches directory and some should have commented values like namespace if you want to add more.  
 
-Example Commands:
+**Example Commands:**
 
-*Deploy Dev Cluster*
+- Deploy Dev Cluster
 
 While in the `overlay/dev` directory, run `kubectl kustomize | kubectl apply -f -` or `kubectl kustomize build | kubectl apply -f -`
 
-*Deploy Prod Cluster*
+- Deploy Prod Cluster*
 
 While in the `overlay/prod` directory, run `kubectl kustomize | kubectl apply -f -` or `kubectl kustomize build | kubectl apply -f -`
 
->NOTE: While I look for an easier way to update all the CRD object name references, you will need to manually change the elasticsearch cluster name if you deploy these to the same namespace. 
+>NOTE: While I look for an easier way to update all the CRD object name references, you will need to manually change the elasticsearch cluster name if you deploy these to the same namespace or change the namespaces. 
 
 ## Base Values
 
@@ -105,7 +107,7 @@ Then take that value and put it in the kibana.yml file like below(`here`).
             value: "<here>"     
 ```
 
-> NOTE: By default in this quickstart, the env var `` is set to `false`. You need to turn this to true after adding the token above.
+> NOTE: By default in this quickstart, the env var `ELASTIC_APM_ACTIVE` is set to `false`. You need to turn this to true after adding the token above.
 
 ## Adding Kube-State-Metrics
 

@@ -4,11 +4,11 @@
 
 ```mermaid
 flowchart LR
-	req(Fleet Server) -.-> req3
-	req(Fleet Server) -.-> req2
+	req(Data Sources) -.-> req3
+	req(Data Sources) -.-> req2
 	req2(Elastic Agent) ---> |System, Kubernetes Integrations|Elasticsearch_Cluster
 	req3(Elastic Agent) ---> |System, Kubernetes Integrations|Elasticsearch_Cluster
-	req(Fleet Server) --- Elasticsearch_Cluster
+	req4(Fleet Server) --- Elasticsearch_Cluster
 	subgraph Elasticsearch_Cluster
 	es-hot-nodeSet --> es-cold-nodeSet --> es-frozen-nodeSet
 	end
@@ -19,36 +19,36 @@ flowchart LR
 
 ## Deployable Assets in this Directory
 
-| Elastic Cluster | Resource | Count | Filename | Features Added |
+| Elastic Cluster | Filename | Resource | Count |  Features Added |
 | :-------------: |:-------------:| :-------------: | :-------------: | :-------------: |
-|main|Elasticsearch|3|elasticsearch.yml|[Virtual Memory](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html), [Persistent Storage](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-volume-claim-templates.html), [Compute Resources](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-managing-compute-resources.html), [Custom Configuration Files (Synonyms)](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-bundles-plugins.html), [Elastic Audit Settings](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s_audit_logging.html), [Internal Monitoring](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-stack-monitoring.html), [Multiple nodeSets](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-orchestration.html#k8s-nodesets)|
-|main|Kibana|1|kibana.yml|[Kibana APM Self Monitoring](https://www.elastic.co/guide/en/kibana/current/kibana-debugging.html), [Compute Resources](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-kibana-advanced-configuration.html)|
-|main|[RBAC Roles](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)||rbac.yml|Kubernetes RBAC for Agents, Fleet|
-|ECK-Wide|Secret:[License](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-licensing.html)||trial-license.yml|Trial License to Enable All Features|
-|main|Fleet Server(Agent)|1|fleet.yml|[Fleet](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-elastic-agent-fleet.html), [APM Integration](https://www.elastic.co/guide/en/apm/guide/current/upgrade-to-apm-integration.html) |
-|main|[Agents](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-elastic-agent-fleet-configuration-examples.html)|1+n|fleet.yml|[System](https://docs.elastic.co/en/integrations/system), [Kubernetes](https://docs.elastic.co/integrations/kubernetes), [Cloud Security Posture](https://docs.elastic.co/integrations/cloud_security_posture), [Endoint](https://docs.elastic.co/integrations/endpoint)|
+|main|elasticsearch.yml|Elasticsearch|3|[Virtual Memory](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html), [Persistent Storage](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-volume-claim-templates.html), [Compute Resources](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-managing-compute-resources.html), [Custom Configuration Files (Synonyms)](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-bundles-plugins.html), [Elastic Audit Settings](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s_audit_logging.html), [Internal Monitoring](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-stack-monitoring.html), [Multiple nodeSets](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-orchestration.html#k8s-nodesets)|
+|main|kibana.yml|Kibana|1|[Kibana APM Self Monitoring](https://www.elastic.co/guide/en/kibana/current/kibana-debugging.html), [Compute Resources](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-kibana-advanced-configuration.html)|
+|main|rbac.yml|[RBAC Roles](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)||Kubernetes RBAC for Agents, Fleet|
+|ECK-Wide|trial-license.yml|Secret:[License](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-licensing.html)||Trial License to Enable All Features|
+|main|fleet.yml|Fleet Server(Agent)|1|[Fleet](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-elastic-agent-fleet.html), [APM Integration](https://www.elastic.co/guide/en/apm/guide/current/upgrade-to-apm-integration.html) |
+|main|fleet.yml|[Agents](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-elastic-agent-fleet-configuration-examples.html)|1+n|[System](https://docs.elastic.co/en/integrations/system), [Kubernetes](https://docs.elastic.co/integrations/kubernetes)|
 
 ## Tiered Storage Cluster
 
-Like the search cluster, this is a taken from the quickstart cluster but focused around tiered persistent storage as an architecture suited to time series or observability use cases.  You will notice for example there are multiple `nodeSet`s for Hot, Cold, and dedicated Frozen nodes, each with its own values and definition.  
+Like the search cluster, this is taken from the quickstart cluster but focused around showing how a cluster with multiple instance types and persistent storage more suited to time series or observability use cases.  There are now multiple `nodeSet`s for Hot, Cold, and dedicated Frozen nodes, each with its own values and definition.  Fleet was not included but see below for a couple simple steps to uncomment the components back into the cluster.
 
 ## Kustomize Instrucitons
 
 `kubectl kustomize` or `kubectl kustomize build` will generate a templated set of YAMLs when run in the right place and in this case, either the `dev` or `prod` sub-directories under `overlay`.
 
-The way it works is that in your terminal, you place yourself in one of the the overlay directories, either dev or prod (baseline also works as flat yamls), and run a command similar to the one above.   Each directory's kustomizaton.yaml file will reference where it pulls the base YAML files from (our base directory) and then changes (patches) to be "overlayed" on top of them; things like compute settings or node counts are typically larger in the production.  The chart below shows some of the differences between each environment. These are generic use case starter values and I would encourage you to iteratively test or engage with Elastic Professional Services etc. to gauge these if you aren't sure.  You can edit any of the values for dev or prod in the `kustomization.yaml` file in each and/or the patches directory.  
+The way it works is that in your terminal, place yourself in one of the the overlay subdirectories, either dev or prod, and run a command similar to the examples below.  Each directory's kustomizaton.yaml file will reference where it pulls the base YAML files from (our base directory) and then changes (patches) to be "overlayed" on top of them; things like compute settings or node counts are typically larger in the production.  The `Base Values` chart below shows some of the differences between each environment. These are generic use case starter values and I would encourage you to iteratively test or engage with Elastic Professional Services etc. to gauge these if you aren't sure.  You can edit any of the values for dev or prod in the `kustomization.yaml` file in each and/or the patches directory and some should have commented values like namespace if you want to add more.  
 
-Example Commands:
+**Example Commands:**
 
-*Deploy Dev Cluster*
+- Deploy Dev Cluster
 
 While in the `overlay/dev` directory, run `kubectl kustomize | kubectl apply -f -` or `kubectl kustomize build | kubectl apply -f -`
 
-*Deploy Prod Cluster*
+- Deploy Prod Cluster*
 
 While in the `overlay/prod` directory, run `kubectl kustomize | kubectl apply -f -` or `kubectl kustomize build | kubectl apply -f -`
 
->NOTE: While I look for an easier way to update all the CRD object name references, you will need to manually change the elasticsearch cluster name if you deploy these to the same namespace. 
+>NOTE: While I look for an easier way to update all the CRD object name references, you will need to manually change the elasticsearch cluster name if you deploy these to the same namespace or change the namespaces. 
 
 ## Base Values
 
@@ -99,7 +99,7 @@ Then take that value and put it in the kibana.yml file like below(`here`).
             value: "<here>"     
 ```
 
-> NOTE: By default in this quickstart, the env var `` is set to `false`. You need to turn this to true after adding the token above.
+> NOTE: By default in this quickstart, the env var `ELASTIC_APM_ACTIVE` is set to `false`. You need to turn this to true after adding the token above.
 
 ### Adding Kube-State-Metrics
 

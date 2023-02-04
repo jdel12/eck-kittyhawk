@@ -9,7 +9,7 @@ flowchart LR
 	req2(Elastic Agent) ---> |System, Kubernetes Integrations|Elasticsearch_Cluster
 	req3(Elastic Agent) ---> |System, Kubernetes Integrations|Elasticsearch_Cluster
 	req(Fleet Server) --- Elasticsearch_Cluster
-	req(Requests) --> Elasticsearch_Cluster
+	req(Data Sources) --> Elasticsearch_Cluster
 	subgraph Elasticsearch_Cluster
 	es1 --- es2
 	end
@@ -20,20 +20,20 @@ flowchart LR
 
 ## Deployable Assets in this Directory
 
-| Elastic Cluster | Resource | Count | Filename | Features Added |
+| Elastic Cluster | Filename | Resource (Kind) | Count |  Features Added |
 | :-------------: |:-------------:| :-------------: | :-------------: | :-------------: |
-|main|Elasticsearch|2|elasticsearch.yml|[Virtual Memory](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html), [Internal Monitoring](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-stack-monitoring.html), [Ephemeral Drives](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-volume-claim-templates.html#k8s_emptydir)|
-|main|Kibana|1|kibana.yml|[Kibana APM Self Monitoring](https://www.elastic.co/guide/en/kibana/current/kibana-debugging.html)|
-|main|Fleet Server(Agent)|1|fleet.yml|[Fleet](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-elastic-agent-fleet.html), [APM Integration](https://www.elastic.co/guide/en/apm/guide/current/upgrade-to-apm-integration.html) |
-|main|[Agents](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-elastic-agent-fleet-configuration-examples.html)|1+n|fleet.yml|[System](https://docs.elastic.co/en/integrations/system), [Kubernetes](https://docs.elastic.co/integrations/kubernetes), [Cloud Security Posture](https://docs.elastic.co/integrations/cloud_security_posture), [Endoint](https://docs.elastic.co/integrations/endpoint)|
-|main|[RBAC Roles](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)||rbac.yml|Kubernetes RBAC for Agents, Fleet|
-|ECK-Wide|Secret:[License](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-licensing.html)||trial-license.yml|Trial License to Enable All Features|
+|main|elasticsearch.yml|Elasticsearch|2|[Virtual Memory](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html), [Internal Monitoring](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-stack-monitoring.html), [Ephemeral Drives](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-volume-claim-templates.html#k8s_emptydir)|
+|main|kibana.yml|Kibana|1|[Kibana APM Self Monitoring](https://www.elastic.co/guide/en/kibana/current/kibana-debugging.html)|
+|main|fleet.yml|Fleet Server(Agent)|1|[Fleet](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-elastic-agent-fleet.html), [APM Integration](https://www.elastic.co/guide/en/apm/guide/current/upgrade-to-apm-integration.html) |
+|main|fleet.yml|[Agents](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-elastic-agent-fleet-configuration-examples.html)|1+n|[System](https://docs.elastic.co/en/integrations/system), [Kubernetes](https://docs.elastic.co/integrations/kubernetes)|
+|main|rbac.yml|[RBAC Roles](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)||Kubernetes RBAC for Agents, Fleet|
+|ECK-Wide|trial-license.yml|Secret:[License](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-licensing.html)||trial-license.yml|[Trial License](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-licensing.html#k8s-start-trial)|
 
-## A basic Fleet-enabled Elasticsearch cluster with ephemeral storage
+## Quickstart Cluster with Ephemeral Storage
 
 This is a basic quickstart ECK cluster that has no persistent storage.  It is meant for drop-in demos or fast exploration with deletion shortly thereafter.
 
-Fleet and a DaemonSet of Agents are setup as well.  Each has several integrations you'd want for Kubernetes observability.  Kibana itself it also preconfigured for these Fleet policies and has it's own packaged APM solution enabled as well with more details on enabling this below. Lastly there is a trial license secret and instrucitons for deploying `kube-state-metrics` for certain metricsets.
+Fleet and a DaemonSet of Agents are setup as well.  Each has several integrations you'd want for Kubernetes observability.  Kibana is preconfigured to load these Fleet policies and has it's own packaged APM solution enabled as well with more details on enabling this below. Lastly there is a trial license secret and instrucitons for deploying `kube-state-metrics` for certain metricsets.
 
 These are just flat yamls that you can deploy at will and as long as the application permits it, leave off anything you dont want. For example:
 
@@ -67,7 +67,7 @@ Then take that value and put it in the kibana.yml file like below(`here`).
             value: "<here>"     
 ```
 
-> NOTE: By default in this quickstart, the env var `` is set to `false`. You need to turn this to true after adding the token above.
+> NOTE: By default in this quickstart, the Kibana env var `ELASTIC_APM_ACTIVE` is set to `false`. You need to turn this to true after adding the token above.
 
 ## Adding Kube-State-Metrics
 
