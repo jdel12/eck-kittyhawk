@@ -4,12 +4,11 @@
 
 ```mermaid
 flowchart LR
-	req(Fleet Server) -.-> req3
-	req(Fleet Server) -.-> req2
+	req(Data Sources) -.-> req3
+	req(Data Sources) -.-> req2
 	req2(Elastic Agent) ---> |System, Kubernetes Integrations|Elasticsearch_Cluster
 	req3(Elastic Agent) ---> |System, Kubernetes Integrations|Elasticsearch_Cluster
-	req(Fleet Server) --- Elasticsearch_Cluster
-	req(Data Sources) --> Elasticsearch_Cluster
+	req4(Fleet Server) --- Elasticsearch_Cluster
 	subgraph Elasticsearch_Cluster
 	es1 --- es2
 	end
