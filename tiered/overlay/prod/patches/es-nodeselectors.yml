@@ -1,0 +1,17 @@
+# Add nodeSelectors to each nodeSet
+
+
+# Hot Nodes
+- op: add
+  path: /spec/nodeSets/0/podTemplate/spec/nodeSelector
+  value: { "nodetemp": "hot" }
+
+# Cold Nodes
+- op: add
+  path: /spec/nodeSets/1/podTemplate/spec/nodeSelector
+  value: { "nodetemp": "cold" }
+
+#Frozen Nodes
+- op: add
+  path: /spec/nodeSets/2/podTemplate/spec/nodeSelector
+  value: { "nodetemp": "frozen" }

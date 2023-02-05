@@ -64,6 +64,10 @@ patches:
     target: 
       kind: Elasticsearch
       name: elasticsearch
+  # - path: ./patches/es-nodeselectors.yml
+  #   target: 
+  #     kind: Elasticsearch
+  #     name: elasticsearch
 # kibana settings
   - path: ./patches/kb-computeresources.yml
     target: 
