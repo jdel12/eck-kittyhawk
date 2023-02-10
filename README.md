@@ -2,7 +2,7 @@
 
 I've always been frustrated with tutorials and quickstarts that show you how to draw stick figures and then follow that up with the Sistene Chappel so this is my attempt to provide a couple of examples to bridge the gap between the two and hopefully they will help you get some air under your wings so you can get started quickly and focus on shaping things from there. 
 
-For now, there are three examples; an ephemeral quickstart cluster, a generic three node (search) cluster, and a tiered storage cluster. These are by no means the only way, the singular best way to build ECK clusters but it is an attempt to provide a more complete starting point than a basic quickstart cluster. Each cluster will have some things different about it and each will have it's own readme file to explain those differences further.
+For now, there are three examples; an ephemeral quickstart cluster, a generic three node (search) cluster, and a tiered storage cluster. These are by no means the only way or the singular best way to build ECK clusters but it is an attempt to provide a more complete starting point. Each cluster will have some things different about it and each will have it's own readme file to explain those differences further.
 
 
 ## Initial Setup of ECK Operator
@@ -21,7 +21,7 @@ kubectl create -f https://download.elastic.co/downloads/eck/2.5.0/crds.yaml
 kubectl apply -f https://download.elastic.co/downloads/eck/2.5.0/operator.yaml
 ```
 
-The operator should be installed and running at this point in the `elastic-system` namespace. Check the logs iwth this command if you would like.
+The operator should be installed and running at this point in the `elastic-system` namespace. Check the logs with this command if you would like.
 
 `kubectl -n elastic-system logs -f statefulset.apps/elastic-operator`
 

@@ -32,6 +32,10 @@ flowchart LR
 
 Like the search cluster, this is taken from the quickstart cluster but focused around showing how a cluster with multiple instance types and persistent storage more suited to time series or observability use cases.  There are now multiple `nodeSet`s for Hot, Cold, and dedicated Frozen nodes, each with its own values and definition.  Fleet was not included but see below for a couple simple steps to uncomment the components back into the cluster.
 
+To just deploy the base files, you can run a straightforward command like below. 
+
+`kubectl apply -f elasticsearch.yml -f kibana.yml -f fleet.yml -f legacy-apmserver.yml -f trial-license.yml`
+
 ## Kustomize Instrucitons
 
 `kubectl kustomize` or `kubectl kustomize build` will generate a templated set of YAMLs when run in the right place and in this case, either the `dev` or `prod` sub-directories under `overlay`.
