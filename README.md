@@ -9,16 +9,16 @@ For now, there are three examples; an ephemeral quickstart cluster, a generic th
 
 You are required to setup the ECK operator before you are able to use any of its custom resources.  We need to install the custom resourse definitions(CRDs) and then spin up the ECK Operator container that will manage the new custom resources we defined.
 
-As always, please consult the current documentation first to be safe. -> https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-deploy-eck.html
+As always, please consult the current documentation first to be safe. -> https://www.elastic.co/docs/deploy-manage/deploy/cloud-on-k8s/install-using-yaml-manifest-quickstart
 
 
 #### *Quickstart Steps*
 1. Run these two commands
 ```
 # Install the Custom Resource Definitions
-kubectl create -f https://download.elastic.co/downloads/eck/2.5.0/crds.yaml
+kubectl create -f https://download.elastic.co/downloads/eck/3.0.0/crds.yaml
 # Install the Elastic Operator
-kubectl apply -f https://download.elastic.co/downloads/eck/2.5.0/operator.yaml
+kubectl apply -f https://download.elastic.co/downloads/eck/3.0.0/operator.yaml
 ```
 
 The operator should be installed and running at this point in the `elastic-system` namespace. Check the logs with this command if you would like.

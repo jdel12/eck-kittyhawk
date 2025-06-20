@@ -59,7 +59,7 @@ While in the `overlay/prod` directory, run `kubectl kustomize | kubectl apply -f
 | Value | Base | Dev | Prod |
 | :-------------: | :-------------: | :-------------: |:-------------: |
 |Count|2|2|3|
-|Version|8.4.3|8.4.3|8.4.2|
+|Version|8.4.3|8.4.3|9.0.0|
 |Elastic Compute Settings|-|CPU:(*request*:2-*limit*:6)<br>Memory:(*request*:8GB-*limit*:16GB)|CPU:(*request*:12-*limit*:15)<br>Memory:(*request*:64-*limit*:64)|
 |JVM Options|Auto|8GB Heap|30GB Heap|
 |Kibana Compute Settings|-|CPU:.5, Mem:1GB|CPU:2, Mem:4GB|

@@ -11,7 +11,7 @@ spec:
     logs:
       elasticsearchRefs:
       - name: elasticsearch
-  version: 8.4.2
+  version: 9.0.0
   count: 1
   elasticsearchRef:
     name: elasticsearch
