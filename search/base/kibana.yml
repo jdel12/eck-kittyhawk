@@ -20,16 +20,6 @@ spec:
       containers:
       - name: kibana
         env:
-          - name: ELASTIC_APM_ACTIVE
-            value: "false"
-          - name: ELASTIC_APM_SERVER_URL
-            value: "https:/apm-server-apm-http:8200"   
-          - name: ELASTIC_APM_VERIFY_SERVER_CERT
-            value: "false"
-          - name: ELASTIC_APM_SERVICE_NAME
-            value: "kibana-quickstart"
-          - name: ELASTIC_APM_SECRET_TOKEN
-            value: "replaceme!"
           - name: NODE_OPTIONS
             value: "--max-old-space-size=2048"
         resources:
