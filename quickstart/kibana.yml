@@ -35,6 +35,8 @@ spec:
       version: latest
     - name: kubernetes
       version: latest
+    - name: apm
+      version: latest
     xpack.fleet.agentPolicies:
     - name: Fleet Server on ECK policy
       id: eck-fleet-server
@@ -64,3 +66,12 @@ spec:
       - package:
           name: kubernetes
         name: kubernetes-1
+      - package:
+          name: apm
+        name: apm-1
+        inputs:
+        - type: apm
+          enabled: true
+          vars:
+          - name: host
+            value: 0.0.0.0:8200
