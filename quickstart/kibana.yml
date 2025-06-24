@@ -18,7 +18,10 @@ spec:
   podTemplate:
     spec:
       containers:
-      - name: kibana   
+      - name: kibana
+        env:
+          - name: ELASTIC_APM_ACTIVE
+            value: "true"  
   config:
     xpack.security.authc.providers.basic.basic1.order: 0
     xpack.fleet.agents.elasticsearch.hosts: ["https://elasticsearch-es-http.default.svc:9200"]
@@ -32,39 +35,28 @@ spec:
       version: latest
     - name: kubernetes
       version: latest
-    - name: apm
-      version: latest
     xpack.fleet.agentPolicies:
     - name: Fleet Server on ECK policy
       id: eck-fleet-server
       namespace: default
+      is_managed: true
       monitoring_enabled:
       - logs
       - metrics
       unenroll_timeout: 900
-      is_default_fleet_server: true
       package_policies:
       - name: fleet_server-1
         id: fleet_server-1
         package:
           name: fleet_server
-      - package:
-          name: apm
-        name: apm-1
-        inputs:
-        - type: apm
-          enabled: true
-          vars:
-          - name: host
-            value: 0.0.0.0:8200   
     - name: Elastic Agent on ECK policy
       id: eck-agent
       namespace: default
+      is_managed: true
       monitoring_enabled:
       - logs
       - metrics
       unenroll_timeout: 900
-      is_default: true
       package_policies:
       - package:
           name: system
