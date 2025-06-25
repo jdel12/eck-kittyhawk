@@ -48,23 +48,6 @@ You can then access the running Kibana by running a kubectl port-forward command
 
 `kubectl port-forward service/kibana-kb-http 5601`
 
-## IMPORTANT: USING KIBANA APM
-
-If you want the Kibana APM functionality to work, you need to first pull the apm-token secret via a command like the one below and paste it into the value on line 32 in kibana.yml, populating 
-
-`kubectl get secret apm-server-apm-token -o=jsonpath='{.data.secret-token}' | base64 --decode; echo`
-
-Then take that value and put it in the kibana.yml file like below(`here`).
-
-```
-  podTemplate:
-    spec:
-      containers:
-      - name: kibana
-        env:
-          - name: ELASTIC_APM_SECRET_TOKEN
-            value: "<here>"     
-```
 
 > NOTE: By default in this quickstart, the Kibana env var `ELASTIC_APM_ACTIVE` is set to `false`. You need to turn this to true after adding the token above.
 

@@ -59,7 +59,7 @@ While in the `overlay/prod` directory, run `kubectl kustomize | kubectl apply -f
 | Value | Base | Dev | Prod |
 | :-------------: | :-------------: | :-------------: |:-------------: |
 |Count|2|2|3|
-|Version|8.4.3|8.4.3|9.0.0|
+|Version|9.0.0|9.0.0|9.0.0|
 |Elastic Compute Settings|-|CPU:(*request*:2-*limit*:6)<br>Memory:(*request*:8GB-*limit*:16GB)|CPU:(*request*:12-*limit*:15)<br>Memory:(*request*:64-*limit*:64)|
 |JVM Options|Auto|8GB Heap|30GB Heap|
 |Kibana Compute Settings|-|CPU:.5, Mem:1GB|CPU:2, Mem:4GB|
@@ -85,27 +85,7 @@ You can then access the running Kibana by running a kubectl port-forward command
 
 `kubectl port-forward service/kibana-kb-http 5601`
 
-## IMPORTANT: USING KIBANA APM
-
-If you want the Kibana APM functionality to work, you need to first pull the apm-token secret via a command like the one below and paste it into the value on line 32 in kibana.yml, populating 
-
-`kubectl get secret apm-server-apm-token -o=jsonpath='{.data.secret-token}' | base64 --decode; echo`
-
-Then take that value and put it in the kibana.yml file like below(`here`).
-
-```
-  podTemplate:
-    spec:
-      containers:
-      - name: kibana
-        env:
-          - name: ELASTIC_APM_SECRET_TOKEN
-            value: "<here>"     
-```
-
-> NOTE: By default in this quickstart, the env var `ELASTIC_APM_ACTIVE` is set to `false`. You need to turn this to true after adding the token above.
-
-### Adding Kube-State-Metrics
+## Adding Kube-State-Metrics
 
 To add the kube-state-metrics server (a Kubernetes official resource) for the `state_*` metricsets, you can visit the repo or deploy the standard example directory resources after cloning the repo locally.
 
