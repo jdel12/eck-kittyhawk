@@ -48,16 +48,31 @@ spec:
     - name: Fleet Server on ECK policy
       id: eck-fleet-server
       namespace: default
+      is_managed: true
       monitoring_enabled:
       - logs
       - metrics
       unenroll_timeout: 900
-      is_default_fleet_server: true
       package_policies:
       - name: fleet_server-1
         id: fleet_server-1
         package:
           name: fleet_server
+    - name: Elastic Agent on ECK policy
+      id: eck-agent
+      namespace: default
+      is_managed: true
+      monitoring_enabled:
+      - logs
+      - metrics
+      unenroll_timeout: 900
+      package_policies:
+      - package:
+          name: system
+        name: system-1
+      - package:
+          name: kubernetes
+        name: kubernetes-1
       - package:
           name: apm
         name: apm-1
@@ -66,19 +81,4 @@ spec:
           enabled: true
           vars:
           - name: host
-            value: 0.0.0.0:8200   
-    - name: Elastic Agent on ECK policy
-      id: eck-agent
-      namespace: default
-      monitoring_enabled:
-      - logs
-      - metrics
-      unenroll_timeout: 900
-      is_default: true
-      package_policies:
-      - package:
-          name: system
-        name: system-1
-      - package:
-          name: kubernetes
-        name: kubernetes-1
+            value: 0.0.0.0:8200
