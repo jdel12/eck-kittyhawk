@@ -85,10 +85,10 @@ spec:
           requests:
             storage: 5Gi
         storageClassName: standard
-  - name: frozen
+  - name: ingest
     count: 1
     config:
-      node.roles: ["data_frozen"]
+      node.roles: ["ingest"]
       xpack.security.audit.enabled: false
       xpack.security.audit.logfile.events.emit_request_body: true
     podTemplate:

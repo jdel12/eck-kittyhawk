@@ -11,7 +11,7 @@
   path: /spec/nodeSets/1/podTemplate/spec/nodeSelector
   value: { "nodetemp": "cold" }
 
-#Frozen Nodes
+# Ingest Nodes
 - op: add
   path: /spec/nodeSets/2/podTemplate/spec/nodeSelector
-  value: { "nodetemp": "frozen" }
+  value: { "nodetemp": "ingest" }

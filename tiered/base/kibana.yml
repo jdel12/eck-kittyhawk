@@ -31,8 +31,6 @@ spec:
             cpu: 2
   config:
     xpack.security.authc.providers.basic.basic1.order: 0
-    csp.strict: false
-    csp.warnLegacyBrowsers: false
     xpack.fleet.agents.elasticsearch.hosts: ["https://elasticsearch-es-http.default.svc:9200"]
     xpack.fleet.agents.fleet_server.hosts: ["https://fleet-server-agent-http.default.svc:8220"]
     xpack.fleet.packages:
