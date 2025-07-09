@@ -46,7 +46,7 @@
     name: ES_JAVA_OPTS
     value: "-Xms8g -Xmx8g"
 
-# Frozen Elasticsearch Pod Resource Requests
+# Ingest Elasticsearch Pod Resource Requests
 
 - op: replace
   path: /spec/nodeSets/2/podTemplate/spec/containers/0/resources/requests/cpu
