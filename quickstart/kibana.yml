@@ -15,13 +15,6 @@ spec:
   count: 1
   elasticsearchRef:
     name: elasticsearch
-  podTemplate:
-    spec:
-      containers:
-      - name: kibana
-        env:
-          - name: ELASTIC_APM_ACTIVE
-            value: "true"  
   config:
     xpack.security.authc.providers.basic.basic1.order: 0
     xpack.fleet.agents.elasticsearch.hosts: ["https://elasticsearch-es-http.default.svc:9200"]
