@@ -32,11 +32,11 @@ flowchart LR
 
 This is a basic quickstart ECK cluster that has no persistent storage.  It is meant for drop-in demos or fast exploration with deletion shortly thereafter.
 
-Fleet and a DaemonSet of Agents are setup as well.  Each has several integrations you'd want for Kubernetes observability.  Kibana is preconfigured to load these Fleet policies and has it's own packaged APM solution enabled as well with more details on enabling this below. Lastly there is a trial license secret and instrucitons for deploying `kube-state-metrics` for certain metricsets.
+Fleet and a DaemonSet of Agents are offered as a setup as well.  Each has several integrations you'd want for Kubernetes observability and Kibana is preconfigured to load these Fleet policies. Lastly there is a trial license secret and instrucitons for deploying `kube-state-metrics` for certain metricsets.
 
 These are just flat yamls that you can deploy at will and as long as the application permits it, leave off anything you dont want. For example:
 
-`kubectl apply -f elasticsearch.yml -f kibana.yml -f fleet.yml -f legacy-apmserver.yml -f trial-license.yml`
+`kubectl apply -f elasticsearch.yml -f kibana.yml -f fleet.yml -f trial-license.yml`
 
 ## Viewing your Data in Kibana
 
@@ -48,8 +48,6 @@ You can then access the running Kibana by running a kubectl port-forward command
 
 `kubectl port-forward service/kibana-kb-http 5601`
 
-
-> NOTE: By default in this quickstart, the Kibana env var `ELASTIC_APM_ACTIVE` is set to `false`. You need to turn this to true after adding the token above.
 
 ## Adding Kube-State-Metrics
 

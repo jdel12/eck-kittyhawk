@@ -34,7 +34,7 @@ Like the search cluster, this is taken from the quickstart cluster but focused a
 
 To just deploy the base files, you can run a straightforward command like below. 
 
-`kubectl apply -f elasticsearch.yml -f kibana.yml -f fleet.yml -f legacy-apmserver.yml -f trial-license.yml`
+`kubectl apply -f elasticsearch.yml -f kibana.yml -f fleet.yml -f trial-license.yml`
 
 ## Kustomize Instrucitons
 
