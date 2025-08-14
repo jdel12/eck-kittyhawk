@@ -11,10 +11,10 @@ patches:
     target: 
       kind: Kibana
       name: kibana
-  - path: ./patches/all-version.yml
-    target: 
-      kind: ApmServer
-      name: apm-server
+  # - path: ./patches/all-version.yml
+  #   target: 
+  #     kind: ApmServer
+  #     name: apm-server
   # - path: ./patches/all-namespace.yml
   #   target: 
   #     kind: Elasticsearch

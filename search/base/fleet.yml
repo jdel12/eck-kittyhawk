@@ -4,13 +4,14 @@ kind: Agent
 metadata:
   name: fleet-server
 spec:
-  version: 8.4.2
+  version: 9.0.0
   kibanaRef:
     name: kibana
   elasticsearchRefs:
   - name: elasticsearch
   mode: fleet
   fleetServerEnabled: true
+  policyID: eck-fleet-server
   deployment:
     replicas: 1
     podTemplate:
@@ -25,12 +26,13 @@ kind: Agent
 metadata: 
   name: elastic-agent
 spec:
-  version: 8.4.2
+  version: 9.0.0
   kibanaRef:
     name: kibana
   fleetServerRef: 
     name: fleet-server
   mode: fleet
+  policyID: eck-agent
   daemonSet:
     podTemplate:
       spec:
@@ -40,27 +42,6 @@ spec:
         automountServiceAccountToken: true
         securityContext:
           runAsUser: 0
-        # containers:
-        #   resources:
-        #     requests:
-        #       memory: 1Gi
-        #       cpu: 0.5
-        #     limits:
-        #       memory: 2.5Gi
-        #       cpu: 2
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: fleet-server
-  namespace: default
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: elastic-agent
-  namespace: default
-
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -76,6 +57,20 @@ rules:
   - get
   - watch
   - list
+- apiGroups: ["apps"]
+  resources:
+    - replicasets
+  verbs:
+    - get
+    - watch
+    - list
+- apiGroups: ["batch"]
+  resources:
+    - jobs
+  verbs:
+    - get
+    - watch
+    - list
 - apiGroups: ["coordination.k8s.io"]
   resources:
   - leases
@@ -83,6 +78,25 @@ rules:
   - get
   - create
   - update
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: fleet-server
+  namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: fleet-server
+subjects:
+- kind: ServiceAccount
+  name: fleet-server
+  namespace: default
+roleRef:
+  kind: ClusterRole
+  name: fleet-server
+  apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -125,6 +139,7 @@ rules:
   - statefulsets
   - deployments
   - replicasets
+  - daemonsets
   verbs:
   - "get"
   - "list"
@@ -135,27 +150,33 @@ rules:
   - nodes/stats
   verbs:
   - get
+- nonResourceURLs:
+  - "/metrics"
+  verbs:
+  - get
 - apiGroups:
   - "batch"
   resources:
   - jobs
+  - cronjobs
+  verbs:
+  - "get"
+  - "list"
+  - "watch"
+- apiGroups:
+  - "storage.k8s.io"
+  resources:
+  - storageclasses
   verbs:
   - "get"
   - "list"
   - "watch"
 ---
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
+apiVersion: v1
+kind: ServiceAccount
 metadata:
-  name: fleet-server
-subjects:
-- kind: ServiceAccount
-  name: fleet-server
+  name: elastic-agent
   namespace: default
-roleRef:
-  kind: ClusterRole
-  name: fleet-server
-  apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -169,4 +190,3 @@ roleRef:
   kind: ClusterRole
   name: elastic-agent
   apiGroup: rbac.authorization.k8s.io
-...

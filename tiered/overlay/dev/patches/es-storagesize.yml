@@ -18,7 +18,7 @@
   path: /spec/nodeSets/1/volumeClaimTemplates/0/spec/storageClassName
   value: "standard"
 
-# Frozen Nodes Storage Size and Class
+# Ingest Nodes Storage Size and Class
 
 - op: replace
   path: /spec/nodeSets/2/volumeClaimTemplates/0/spec/resources/requests/storage

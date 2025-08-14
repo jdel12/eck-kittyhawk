@@ -18,7 +18,7 @@ flowchart LR
 | Elastic Cluster | Filename |  Resource (Kind) | Count | Features Added |
 | :-------------: |:-------------:| :-------------: | :-------------: | :-------------: |
 |main|elasticsearch.yml|Elasticsearch|2|[Virtual Memory](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html), [Persistent Storage](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-volume-claim-templates.html), [Compute Resources](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-managing-compute-resources.html), [Custom Configuration Files (Synonyms)](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-bundles-plugins.html), [Elastic Audit Settings](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s_audit_logging.html), [Internal Monitoring](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-stack-monitoring.html)|
-|main|kibana.yml|Kibana|1|[Kibana APM Self Monitoring](https://www.elastic.co/guide/en/kibana/current/kibana-debugging.html), [Compute Resources](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-kibana-advanced-configuration.html)|
+|main|kibana.yml|Kibana|1|[Compute Resources](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-kibana-advanced-configuration.html)|
 |main|rbac.yml|[RBAC Roles](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)||Kubernetes RBAC for Agents, Fleet|
 |main|synonyms-configmap.yml|configMap||[Custom Configuration Files](https://www.elastic.co/guide/en/cloud-on-k8s/master/k8s-bundles-plugins.html)|
 |ECK-Wide|trial-license.yml|Secret:[License](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-licensing.html)||Trial License to Enable All Features|
@@ -32,7 +32,7 @@ flowchart LR
 
 We have taken our previous quickstart cluster but made a few additions like persistent storage and a custom synonyms file to make a relatively straightforward 2-3 node Elasticsearch cluster.  The table above should reflect the assets being deployed and documentation references to the added features and settings. You can deploy the yamls in the base directory flat and as is with a normal kubectl command. 
 
-`kubectl apply -f elasticsearch.yml -f kibana.yml -f synonyms-configmap.yml -f legacy-apmserver.yml -f trial-license.yml`
+`kubectl apply -f elasticsearch.yml -f kibana.yml -f synonyms-configmap.yml -f trial-license.yml`
 
 However, next to the base directory is the overlay directory which has  `dev` and `prod` subdirectories.  By using a tool called `Kustomize` that is built into every kubectl command line, we can do some simple templating by environment and "overlay" the values appropriately.  The goal is that in lieu of your own preferred strategy, this should be a low depency method to build out and maintain a core base yaml set with various overlays making changes to say resources, version, or node counts. You are by no means forced to use this and can generate a template and just use the output. 
 
@@ -64,7 +64,7 @@ While in the `overlay/prod` directory, run `kubectl kustomize | kubectl apply -f
 | Value | Base | Dev | Prod |
 | :-------------: | :-------------: | :-------------: |:-------------: |
 |Count|2|2|3|
-|Version|8.4.3|8.4.3|8.4.2|
+|Version|9.0.0|9.0.0|9.0.0|
 |Elastic Compute Settings|-|CPU:(*request*:2-*limit*:6)<br>Memory:(*request*:8GB-*limit*:16GB)|CPU:(*request*:12-*limit*:15)<br>Memory:(*request*:64-*limit*:64)|
 |JVM Options|Auto|8GB Heap|30GB Heap|
 |Kibana Compute Settings|-|CPU:.5, Mem:1GB|CPU:2, Mem:4GB|
@@ -90,25 +90,6 @@ You can then access the running Kibana by running a kubectl port-forward command
 
 `kubectl port-forward service/kibana-kb-http 5601`
 
-## IMPORTANT: USING KIBANA APM
-
-If you want the Kibana APM functionality to work, you need to first pull the apm-token secret via a command like the one below and paste it into the value on line 32 in kibana.yml, populating 
-
-`kubectl get secret apm-server-apm-token -o=jsonpath='{.data.secret-token}' | base64 --decode; echo`
-
-Then take that value and put it in the kibana.yml file like below(`here`).
-
-```
-  podTemplate:
-    spec:
-      containers:
-      - name: kibana
-        env:
-          - name: ELASTIC_APM_SECRET_TOKEN
-            value: "<here>"     
-```
-
-> NOTE: By default in this quickstart, the env var `ELASTIC_APM_ACTIVE` is set to `false`. You need to turn this to true after adding the token above.
 
 ## Adding Kube-State-Metrics
 

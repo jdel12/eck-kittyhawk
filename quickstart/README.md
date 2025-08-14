@@ -22,7 +22,7 @@ flowchart LR
 | Elastic Cluster | Filename | Resource (Kind) | Count |  Features Added |
 | :-------------: |:-------------:| :-------------: | :-------------: | :-------------: |
 |main|elasticsearch.yml|Elasticsearch|2|[Virtual Memory](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html), [Internal Monitoring](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-stack-monitoring.html), [Ephemeral Drives](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-volume-claim-templates.html#k8s_emptydir)|
-|main|kibana.yml|Kibana|1|[Kibana APM Self Monitoring](https://www.elastic.co/guide/en/kibana/current/kibana-debugging.html)|
+|main|kibana.yml|Kibana|1||
 |main|fleet.yml|Fleet Server(Agent)|1|[Fleet](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-elastic-agent-fleet.html), [APM Integration](https://www.elastic.co/guide/en/apm/guide/current/upgrade-to-apm-integration.html) |
 |main|fleet.yml|[Agents](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-elastic-agent-fleet-configuration-examples.html)|1+n|[System](https://docs.elastic.co/en/integrations/system), [Kubernetes](https://docs.elastic.co/integrations/kubernetes)|
 |main|rbac.yml|[RBAC Roles](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)||Kubernetes RBAC for Agents, Fleet|
@@ -32,11 +32,11 @@ flowchart LR
 
 This is a basic quickstart ECK cluster that has no persistent storage.  It is meant for drop-in demos or fast exploration with deletion shortly thereafter.
 
-Fleet and a DaemonSet of Agents are setup as well.  Each has several integrations you'd want for Kubernetes observability.  Kibana is preconfigured to load these Fleet policies and has it's own packaged APM solution enabled as well with more details on enabling this below. Lastly there is a trial license secret and instrucitons for deploying `kube-state-metrics` for certain metricsets.
+Fleet and a DaemonSet of Agents are offered as a setup as well.  Each has several integrations you'd want for Kubernetes observability and Kibana is preconfigured to load these Fleet policies. Lastly there is a trial license secret and instrucitons for deploying `kube-state-metrics` for certain metricsets.
 
 These are just flat yamls that you can deploy at will and as long as the application permits it, leave off anything you dont want. For example:
 
-`kubectl apply -f elasticsearch.yml -f kibana.yml -f fleet.yml -f legacy-apmserver.yml -f trial-license.yml`
+`kubectl apply -f elasticsearch.yml -f kibana.yml -f fleet.yml -f trial-license.yml`
 
 ## Viewing your Data in Kibana
 
@@ -48,25 +48,6 @@ You can then access the running Kibana by running a kubectl port-forward command
 
 `kubectl port-forward service/kibana-kb-http 5601`
 
-## IMPORTANT: USING KIBANA APM
-
-If you want the Kibana APM functionality to work, you need to first pull the apm-token secret via a command like the one below and paste it into the value on line 32 in kibana.yml, populating 
-
-`kubectl get secret apm-server-apm-token -o=jsonpath='{.data.secret-token}' | base64 --decode; echo`
-
-Then take that value and put it in the kibana.yml file like below(`here`).
-
-```
-  podTemplate:
-    spec:
-      containers:
-      - name: kibana
-        env:
-          - name: ELASTIC_APM_SECRET_TOKEN
-            value: "<here>"     
-```
-
-> NOTE: By default in this quickstart, the Kibana env var `ELASTIC_APM_ACTIVE` is set to `false`. You need to turn this to true after adding the token above.
 
 ## Adding Kube-State-Metrics
 

@@ -46,7 +46,7 @@
     name: ES_JAVA_OPTS
     value: "-Xms30g -Xmx30g"
 
-# Frozen Elasticsearch Container Resource Requests
+# Ingest Elasticsearch Container Resource Requests
 
 - op: replace
   path: /spec/nodeSets/2/podTemplate/spec/containers/0/resources/requests/cpu

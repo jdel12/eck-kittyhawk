@@ -10,19 +10,19 @@ flowchart LR
 	req3(Elastic Agent) ---> |System, Kubernetes Integrations|Elasticsearch_Cluster
 	req4(Fleet Server) --- Elasticsearch_Cluster
 	subgraph Elasticsearch_Cluster
-	es-hot-nodeSet --> es-cold-nodeSet --> es-frozen-nodeSet
+	es-hot-nodeSet --> es-cold-nodeSet
+	es-ingest-nodeSet -.-> es-hot-nodeSet
 	end
 	Elasticsearch_Cluster --- Kibana
 	Elasticsearch_Cluster --- A[/Kubernetes Secret: License\]
 
 ```
-
 ## Deployable Assets in this Directory
 
 | Elastic Cluster | Filename | Resource | Count |  Features Added |
 | :-------------: |:-------------:| :-------------: | :-------------: | :-------------: |
 |main|elasticsearch.yml|Elasticsearch|3|[Virtual Memory](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html), [Persistent Storage](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-volume-claim-templates.html), [Compute Resources](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-managing-compute-resources.html), [Custom Configuration Files (Synonyms)](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-bundles-plugins.html), [Elastic Audit Settings](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s_audit_logging.html), [Internal Monitoring](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-stack-monitoring.html), [Multiple nodeSets](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-orchestration.html#k8s-nodesets)|
-|main|kibana.yml|Kibana|1|[Kibana APM Self Monitoring](https://www.elastic.co/guide/en/kibana/current/kibana-debugging.html), [Compute Resources](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-kibana-advanced-configuration.html)|
+|main|kibana.yml|Kibana|1|[Compute Resources](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-kibana-advanced-configuration.html)|
 |main|rbac.yml|[RBAC Roles](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)||Kubernetes RBAC for Agents, Fleet|
 |ECK-Wide|trial-license.yml|Secret:[License](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-licensing.html)||Trial License to Enable All Features|
 |main|fleet.yml|Fleet Server(Agent)|1|[Fleet](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-elastic-agent-fleet.html), [APM Integration](https://www.elastic.co/guide/en/apm/guide/current/upgrade-to-apm-integration.html) |
@@ -30,11 +30,11 @@ flowchart LR
 
 ## Tiered Storage Cluster
 
-Like the search cluster, this is taken from the quickstart cluster but focused around showing how a cluster with multiple instance types and persistent storage more suited to time series or observability use cases.  There are now multiple `nodeSet`s for Hot, Cold, and dedicated Frozen nodes, each with its own values and definition.  Fleet was not included but see below for a couple simple steps to uncomment the components back into the cluster.
+Like the search cluster, this is taken from the quickstart cluster but focused around showing how a cluster with multiple instance types and persistent storage more suited to time series or observability use cases.  There are now multiple `nodeSet`s for Hot, Cold, and dedicated Ingest nodes, each with its own values and definition.  Fleet was not included but see below for a couple simple steps to uncomment the components back into the cluster.
 
 To just deploy the base files, you can run a straightforward command like below. 
 
-`kubectl apply -f elasticsearch.yml -f kibana.yml -f fleet.yml -f legacy-apmserver.yml -f trial-license.yml`
+`kubectl apply -f elasticsearch.yml -f kibana.yml -f fleet.yml -f trial-license.yml`
 
 ## Kustomize Instrucitons
 
@@ -59,7 +59,7 @@ While in the `overlay/prod` directory, run `kubectl kustomize | kubectl apply -f
 | Value | Base | Dev | Prod |
 | :-------------: | :-------------: | :-------------: |:-------------: |
 |Count|2|2|3|
-|Version|8.4.3|8.4.3|8.4.2|
+|Version|9.0.0|9.0.0|9.0.0|
 |Elastic Compute Settings|-|CPU:(*request*:2-*limit*:6)<br>Memory:(*request*:8GB-*limit*:16GB)|CPU:(*request*:12-*limit*:15)<br>Memory:(*request*:64-*limit*:64)|
 |JVM Options|Auto|8GB Heap|30GB Heap|
 |Kibana Compute Settings|-|CPU:.5, Mem:1GB|CPU:2, Mem:4GB|
@@ -85,27 +85,7 @@ You can then access the running Kibana by running a kubectl port-forward command
 
 `kubectl port-forward service/kibana-kb-http 5601`
 
-## IMPORTANT: USING KIBANA APM
-
-If you want the Kibana APM functionality to work, you need to first pull the apm-token secret via a command like the one below and paste it into the value on line 32 in kibana.yml, populating 
-
-`kubectl get secret apm-server-apm-token -o=jsonpath='{.data.secret-token}' | base64 --decode; echo`
-
-Then take that value and put it in the kibana.yml file like below(`here`).
-
-```
-  podTemplate:
-    spec:
-      containers:
-      - name: kibana
-        env:
-          - name: ELASTIC_APM_SECRET_TOKEN
-            value: "<here>"     
-```
-
-> NOTE: By default in this quickstart, the env var `ELASTIC_APM_ACTIVE` is set to `false`. You need to turn this to true after adding the token above.
-
-### Adding Kube-State-Metrics
+## Adding Kube-State-Metrics
 
 To add the kube-state-metrics server (a Kubernetes official resource) for the `state_*` metricsets, you can visit the repo or deploy the standard example directory resources after cloning the repo locally.
 

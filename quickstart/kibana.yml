@@ -11,25 +11,10 @@ spec:
     logs:
       elasticsearchRefs:
       - name: elasticsearch
-  version: 8.4.2
+  version: 9.0.0
   count: 1
   elasticsearchRef:
     name: elasticsearch
-  podTemplate:
-    spec:
-      containers:
-      - name: kibana
-        env:
-          - name: ELASTIC_APM_ACTIVE
-            value: "false"
-          - name: ELASTIC_APM_SERVER_URL
-            value: "https:/apm-server-apm-http:8200"   
-          - name: ELASTIC_APM_VERIFY_SERVER_CERT
-            value: "false"
-          - name: ELASTIC_APM_SERVICE_NAME
-            value: "kibana-quickstart"
-          - name: ELASTIC_APM_SECRET_TOKEN
-            value: "replaceme!"     
   config:
     xpack.security.authc.providers.basic.basic1.order: 0
     xpack.fleet.agents.elasticsearch.hosts: ["https://elasticsearch-es-http.default.svc:9200"]
@@ -49,16 +34,31 @@ spec:
     - name: Fleet Server on ECK policy
       id: eck-fleet-server
       namespace: default
+      is_managed: true
       monitoring_enabled:
       - logs
       - metrics
       unenroll_timeout: 900
-      is_default_fleet_server: true
       package_policies:
       - name: fleet_server-1
         id: fleet_server-1
         package:
           name: fleet_server
+    - name: Elastic Agent on ECK policy
+      id: eck-agent
+      namespace: default
+      is_managed: true
+      monitoring_enabled:
+      - logs
+      - metrics
+      unenroll_timeout: 900
+      package_policies:
+      - package:
+          name: system
+        name: system-1
+      - package:
+          name: kubernetes
+        name: kubernetes-1
       - package:
           name: apm
         name: apm-1
@@ -67,19 +67,4 @@ spec:
           enabled: true
           vars:
           - name: host
-            value: 0.0.0.0:8200   
-    - name: Elastic Agent on ECK policy
-      id: eck-agent
-      namespace: default
-      monitoring_enabled:
-      - logs
-      - metrics
-      unenroll_timeout: 900
-      is_default: true
-      package_policies:
-      - package:
-          name: system
-        name: system-1
-      - package:
-          name: kubernetes
-        name: kubernetes-1
+            value: 0.0.0.0:8200
