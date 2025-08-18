@@ -1,0 +1,454 @@
+<!doctype html>
+<html>
+    <head>
+        <title>ECK Cluster YAML Generator</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <style>
+            body {
+                background: #101c3f;
+                font-family: Roboto, sans-serif;
+                color: white;
+                margin: 0;
+            }
+            .container {
+                max-width: 900px;
+                margin: 20px auto;
+                background: rgba(255, 255, 255, 0.05);
+                padding: 20px;
+                border-radius: 8px;
+            }
+            label {
+                display: block;
+                margin-bottom: 6px;
+                font-size: 0.95em;
+            }
+            input,
+            select,
+            textarea,
+            button {
+                width: 100%;
+                padding: 8px;
+                margin-bottom: 12px;
+                border: none;
+                border-radius: 4px;
+                font-size: 1em;
+                background: #1b2b5a;
+                color: white;
+                box-sizing: border-box;
+            }
+            input::placeholder,
+            textarea::placeholder {
+                color: #bbb;
+            }
+            button {
+                background: #4caf50;
+                cursor: pointer;
+            }
+            .remove-btn {
+                background: #e63946;
+            }
+            .copy-btn {
+                background: #ff9800;
+                margin-right: 6px;
+            }
+            pre {
+                background: #0d172f;
+                padding: 15px;
+                border-radius: 6px;
+                overflow-x: auto;
+                white-space: pre-wrap;
+            }
+            .kv-pair {
+                display: flex;
+                gap: 6px;
+                margin-bottom: 6px;
+                align-items: center;
+            }
+            .kv-pair input {
+                flex: 1;
+            }
+            .kv-pair .remove-btn {
+                flex: 0 0 auto;
+                width: 30px;
+                padding: 0;
+                height: 32px;
+                font-size: 16px;
+                text-align: center;
+            }
+            .add-btn {
+                background: #555;
+                margin-bottom: 10px;
+            }
+            details summary {
+                cursor: pointer;
+                font-weight: bold;
+                margin-bottom: 12px;
+            }
+            .roles-group {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+                margin-bottom: 12px;
+            }
+            .roles-group label {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                background: rgba(255, 255, 255, 0.05);
+                padding: 4px 6px;
+                border-radius: 4px;
+            }
+        </style>
+        <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+        <script>
+            const ALL_ROLES = [
+                "master",
+                "data",
+                "data_content",
+                "data_hot",
+                "data_warm",
+                "data_cold",
+                "data_frozen",
+                "ingest",
+                "ml",
+                "remote_cluster_client",
+                "transform",
+            ];
+            function addKVRow(containerId, keyVal = { key: "", val: "" }) {
+                const container = document.getElementById(containerId);
+                const div = document.createElement("div");
+                div.className = "kv-pair";
+                div.innerHTML = `
+                    <input name="${containerId}_key" placeholder="Key" value="${keyVal.key}" />
+                    <input name="${containerId}_val" placeholder="Value" value="${keyVal.val}" />
+                    <button type="button" class="remove-btn" onclick="this.parentNode.remove()">x</button>
+                `;
+                container.appendChild(div);
+            }
+            function addNodeSet(data) {
+                const idx = document.querySelectorAll(".nodeSet").length;
+                const container = document.getElementById("nodesets-container");
+                const htmlBlock = `
+                <div class="nodeSet">
+                  <label>NodeSet Name</label>
+                  <input name="nodeSets[${idx}][name]" value="${data.name || ""}" required />
+                  <label>Node Count</label>
+                  <input type="number" min="1" name="nodeSets[${idx}][count]" value="${data.count || 1}" required />
+                  <label>Node Roles</label>
+                  <div class="roles-group">
+                    ${ALL_ROLES.map(
+                        (r) =>
+                            `<label><input type="checkbox" name="nodeSets[${idx}][roles]" value="${r}" ${
+                                data.roles && data.roles.includes(r)
+                                    ? "checked"
+                                    : ""
+                            }> ${r}</label>`,
+                    ).join("")}
+                  </div>
+                  <label>Extra Config (YAML)</label>
+                  <textarea name="nodeSets[${idx}][configYaml]">${data.configYaml || ""}</textarea>
+                  <details>
+                    <summary>Advanced NodeSet Settings</summary>
+                    <label>Labels</label>
+                    <div id="ns${idx}_labels"></div>
+                    <button type="button" class="add-btn" onclick="addKVRow('ns${idx}_labels')">+ Add Label</button>
+                    <label>Annotations</label>
+                    <div id="ns${idx}_annotations"></div>
+                    <button type="button" class="add-btn" onclick="addKVRow('ns${idx}_annotations')">+ Add Annotation</button>
+                    <label>Node Selector</label>
+                    <div id="ns${idx}_nodeSelector"></div>
+                    <button type="button" class="add-btn" onclick="addKVRow('ns${idx}_nodeSelector')">+ Add Selector</button>
+                    <label>CPU Request</label>
+                    <input name="nodeSets[${idx}][cpuRequest]" placeholder="500m" />
+                    <label>CPU Limit</label>
+                    <input name="nodeSets[${idx}][cpuLimit]" placeholder="1" />
+                    <label>Memory Request</label>
+                    <input name="nodeSets[${idx}][memRequest]" placeholder="2Gi" />
+                    <label>Memory Limit</label>
+                    <input name="nodeSets[${idx}][memLimit]" placeholder="4Gi" />
+                    <label>Storage Class</label>
+                    <input name="nodeSets[${idx}][storageClass]" placeholder="standard" />
+                    <label>Storage Size</label>
+                    <input name="nodeSets[${idx}][storageSize]" placeholder="30Gi" />
+                    <label>Environment Variables (YAML)</label>
+                    <textarea name="nodeSets[${idx}][env]" placeholder="- name: ES_JAVA_OPTS\n  value: -Xms2g -Xmx2g"></textarea>
+                  </details>
+                  <button type="button" class="remove-btn" onclick="this.closest('.nodeSet').remove()">Remove NodeSet</button>
+                </div>`;
+                container.insertAdjacentHTML("beforeend", htmlBlock);
+            }
+            function kvPairsToDict(keys, vals) {
+                const out = {};
+                keys.forEach((k, i) => {
+                    const key = k.trim();
+                    if (key) out[key] = (vals[i] || "").trim();
+                });
+                return Object.keys(out).length ? out : null;
+            }
+            function safeYamlLoad(s) {
+                if (!s || !s.trim()) return null;
+                try {
+                    return jsyaml.load(s) || null;
+                } catch {
+                    return null;
+                }
+            }
+            function generateYAMLFromForm(formData) {
+                const clusterLabels = kvPairsToDict(
+                    formData.getAll("clusterLabels_key"),
+                    formData.getAll("clusterLabels_val"),
+                );
+                const clusterAnnotations = kvPairsToDict(
+                    formData.getAll("clusterAnnotations_key"),
+                    formData.getAll("clusterAnnotations_val"),
+                );
+                const clusterSelector = kvPairsToDict(
+                    formData.getAll("clusterNodeSelector_key"),
+                    formData.getAll("clusterNodeSelector_val"),
+                );
+                const cluster = {
+                    apiVersion: "elasticsearch.k8s.elastic.co/v1",
+                    kind: "Elasticsearch",
+                    metadata: {
+                        name: formData.get("clusterName") || "elasticsearch",
+                    },
+                    spec: { version: formData.get("version") || "9.0.0" },
+                };
+                if (clusterLabels) cluster.metadata.labels = clusterLabels;
+                if (clusterAnnotations)
+                    cluster.metadata.annotations = clusterAnnotations;
+                if (clusterSelector)
+                    cluster.spec.nodeSelector = clusterSelector;
+                const extraYaml = (formData.get("extraYaml") || "").trim();
+                if (extraYaml)
+                    Object.assign(cluster.spec, safeYamlLoad(extraYaml) || {});
+                const indices = [
+                    ...new Set(
+                        [...formData.keys()]
+                            .filter((k) => k.startsWith("nodeSets["))
+                            .map((k) => parseInt(k.split("[")[1])),
+                    ),
+                ].sort((a, b) => a - b);
+                const nodeSets = [];
+                indices.forEach((idx) => {
+                    const nsLabels = kvPairsToDict(
+                        formData.getAll(`ns${idx}_labels_key`),
+                        formData.getAll(`ns${idx}_labels_val`),
+                    );
+                    const nsAnno = kvPairsToDict(
+                        formData.getAll(`ns${idx}_annotations_key`),
+                        formData.getAll(`ns${idx}_annotations_val`),
+                    );
+                    const nsSel = kvPairsToDict(
+                        formData.getAll(`ns${idx}_nodeSelector_key`),
+                        formData.getAll(`ns${idx}_nodeSelector_val`),
+                    );
+                    const roles = formData.getAll(`nodeSets[${idx}][roles]`);
+                    const ns = {
+                        name: formData.get(`nodeSets[${idx}][name]`) || "",
+                        count: parseInt(
+                            formData.get(`nodeSets[${idx}][count]`) || "1",
+                        ),
+                        config: { "node.roles": roles },
+                    };
+                    const extraCfg = (
+                        formData.get(`nodeSets[${idx}][configYaml]`) || ""
+                    ).trim();
+                    if (extraCfg)
+                        Object.assign(ns.config, safeYamlLoad(extraCfg) || {});
+                    const podMeta = {};
+                    const podSpec = {};
+                    if (nsLabels) podMeta.labels = nsLabels;
+                    if (nsAnno) podMeta.annotations = nsAnno;
+                    if (nsSel) podSpec.nodeSelector = nsSel;
+                    const cpuReq = (
+                        formData.get(`nodeSets[${idx}][cpuRequest]`) || ""
+                    ).trim();
+                    const cpuLim = (
+                        formData.get(`nodeSets[${idx}][cpuLimit]`) || ""
+                    ).trim();
+                    const memReq = (
+                        formData.get(`nodeSets[${idx}][memRequest]`) || ""
+                    ).trim();
+                    const memLim = (
+                        formData.get(`nodeSets[${idx}][memLimit]`) || ""
+                    ).trim();
+                    if (cpuReq || cpuLim || memReq || memLim) {
+                        const resources = {};
+                        if (cpuReq || memReq) {
+                            resources.requests = {};
+                            if (cpuReq) resources.requests.cpu = cpuReq;
+                            if (memReq) resources.requests.memory = memReq;
+                        }
+                        if (cpuLim || memLim) {
+                            resources.limits = {};
+                            if (cpuLim) resources.limits.cpu = cpuLim;
+                            if (memLim) resources.limits.memory = memLim;
+                        }
+                        podSpec.containers = podSpec.containers || [{}];
+                        podSpec.containers[0].resources = {
+                            ...podSpec.containers[0].resources,
+                            ...resources,
+                        };
+                    }
+                    const envVars = safeYamlLoad(
+                        formData.get(`nodeSets[${idx}][env]`) || "",
+                    );
+                    if (envVars) {
+                        podSpec.containers = podSpec.containers || [{}];
+                        podSpec.containers[0].env = envVars;
+                    }
+                    const storageClass = (
+                        formData.get(`nodeSets[${idx}][storageClass]`) || ""
+                    ).trim();
+                    const storageSize = (
+                        formData.get(`nodeSets[${idx}][storageSize]`) || ""
+                    ).trim();
+                    if (storageClass || storageSize) {
+                        ns.volumeClaimTemplates = [
+                            {
+                                metadata: { name: "elasticsearch-data" },
+                                spec: {
+                                    accessModes: ["ReadWriteOnce"],
+                                    resources: {
+                                        requests: {
+                                            storage: storageSize || "30Gi",
+                                        },
+                                    },
+                                    storageClassName: storageClass || null,
+                                },
+                            },
+                        ];
+                    }
+                    if (
+                        Object.keys(podMeta).length ||
+                        Object.keys(podSpec).length
+                    ) {
+                        ns.podTemplate = {};
+                        if (Object.keys(podMeta).length)
+                            ns.podTemplate.metadata = podMeta;
+                        if (Object.keys(podSpec).length)
+                            ns.podTemplate.spec = podSpec;
+                    }
+                    nodeSets.push(ns);
+                });
+                cluster.spec.nodeSets = nodeSets;
+                return jsyaml.dump(cluster, { sortKeys: false });
+            }
+            function copyYAML() {
+                const yamlText =
+                    document.getElementById("yaml-output-text").innerText;
+                navigator.clipboard
+                    .writeText(yamlText)
+                    .then(() => alert("YAML copied!"))
+                    .catch(() => alert("Failed to copy"));
+            }
+            function downloadYAML() {
+                const yamlText =
+                    document.getElementById("yaml-output-text").innerText;
+                const blob = new Blob([yamlText], { type: "text/yaml" });
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = "elasticsearch-cluster.yaml";
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+            document.addEventListener("DOMContentLoaded", () => {
+                [
+                    "clusterLabels",
+                    "clusterAnnotations",
+                    "clusterNodeSelector",
+                ].forEach((id) => addKVRow(id));
+                addNodeSet({
+                    name: "newnodeset",
+                    count: 1,
+                    roles: ["master", "data", "ingest"],
+                    configYaml: "",
+                });
+                document
+                    .querySelector('.container button[onclick^="addNodeSet"]')
+                    .setAttribute(
+                        "onclick",
+                        `addNodeSet({name:"newnodeset",count:1,roles:["master","data","ingest"],configYaml:""})`,
+                    );
+                document
+                    .getElementById("cluster-form")
+                    .addEventListener("submit", (e) => {
+                        e.preventDefault();
+                        const formData = new FormData(e.target);
+                        const yamlStr = generateYAMLFromForm(formData);
+                        document.getElementById(
+                            "yaml-output-container",
+                        ).innerHTML = `
+                        <h3>YAML Output</h3>
+                        <button class='copy-btn' type='button' onclick='copyYAML()'>Copy YAML</button>
+                        <button class='button' type='button' onclick='downloadYAML()'>Download YAML</button>
+                        <pre id='yaml-output-text'>${yamlStr}</pre>
+                    `;
+                    });
+            });
+        </script>
+    </head>
+    <body>
+        <h1 style="text-align: center">ECK Cluster YAML Generator</h1>
+        <form id="cluster-form">
+            <div class="container">
+                <h2>Cluster-wide Settings</h2>
+                <label>Cluster Name</label>
+                <input name="clusterName" value="elasticsearch" required />
+                <label>Version</label>
+                <input name="version" value="9.0.0" required />
+                <label>Extra Cluster Config (YAML)</label>
+                <textarea name="extraYaml"></textarea>
+                <details>
+                    <summary>Advanced Cluster Settings</summary>
+                    <label>Labels</label>
+                    <div id="clusterLabels"></div>
+                    <button
+                        type="button"
+                        class="add-btn"
+                        onclick="addKVRow('clusterLabels')"
+                    >
+                        + Add Label
+                    </button>
+                    <label>Annotations</label>
+                    <div id="clusterAnnotations"></div>
+                    <button
+                        type="button"
+                        class="add-btn"
+                        onclick="addKVRow('clusterAnnotations')"
+                    >
+                        + Add Annotation
+                    </button>
+                    <label>Node Selector</label>
+                    <div id="clusterNodeSelector"></div>
+                    <button
+                        type="button"
+                        class="add-btn"
+                        onclick="addKVRow('clusterNodeSelector')"
+                    >
+                        + Add Selector
+                    </button>
+                </details>
+            </div>
+            <div class="container">
+                <h2>NodeSets</h2>
+                <div id="nodesets-container"></div>
+                <button
+                    type="button"
+                    onclick='addNodeSet({name:"hot",count:1,roles:["master"],configYaml:""})'
+                >
+                    + Add NodeSet
+                </button>
+            </div>
+            <div class="container">
+                <button type="submit" style="background: #2196f3">
+                    Generate YAML
+                </button>
+            </div>
+        </form>
+        <div class="container" id="yaml-output-container"></div>
+    </body>
+</html>
+
