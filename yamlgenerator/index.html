@@ -293,7 +293,6 @@ function generateYAMLFromForm(formData) {
     if (img) cluster.spec.image = img;
     const rcse = formData.get("remoteClusterServer")?.trim();
     if (rcse) cluster.spec.remoteClusterServer = { enabled: rcse === "true" };
-    // ✅ Remote Clusters only if non-empty
     const rcsIdxs = [...formData.keys()]
         .filter((k) => k.startsWith("remoteClusters["))
         .map((k) => parseInt(k.split("[")[1]))
@@ -387,6 +386,7 @@ function generateYAMLFromForm(formData) {
                 if (memLim) resources.limits.memory = memLim;
             }
             podSpec.containers = podSpec.containers || [{}];
+            podSpec.containers[0].name = "elasticsearch";
             podSpec.containers[0].resources = {
                 ...podSpec.containers[0].resources,
                 ...resources,
@@ -394,6 +394,9 @@ function generateYAMLFromForm(formData) {
         }
         if (envVars) {
             podSpec.containers = podSpec.containers || [{}];
+            if (!podSpec.containers[0].name) {
+                podSpec.containers[0].name = "elasticsearch";
+            }
             podSpec.containers[0].env = envVars;
         }
         if (Object.keys(podMeta).length || Object.keys(podSpec).length) {
