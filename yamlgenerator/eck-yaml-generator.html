@@ -1,11 +1,11 @@
 <!doctype html>
 <html>
     <head>
-        <title>ECK Cluster YAML Generator</title>
+        <title>ECK Elasticsearch Cluster YAML Generator</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <style>
             body {
-                background: #153385;
+                background: #0B64DD;
                 font-family: system-ui;
                 color: #333;
                 margin: 0;
@@ -69,8 +69,8 @@
                 transform: translateY(-1px);
             }
             .remove-btn {
-                background: #f44336;
-                color: white;
+                background: #E55940;
+                color: black;
             }
             .copy-btn {
                 background: #ff9800;
@@ -81,11 +81,11 @@
                 color: #333;
             }
             button.primary {
-                background-color: #0366d6;
+                background-color: #153385;
                 color: white;
             }
             button.primary:hover {
-                background-color: #0353b6;
+                background-color: #154385;
             }
             .kv-pair {
                 display: flex;
@@ -268,205 +268,166 @@
                     return null;
                 }
             }
-            function generateYAMLFromForm(formData) {
-                const clusterLabels = kvPairsToDict(
-                    formData.getAll("clusterLabels_key"),
-                    formData.getAll("clusterLabels_val"),
-                );
-                const clusterAnnotations = kvPairsToDict(
-                    formData.getAll("clusterAnnotations_key"),
-                    formData.getAll("clusterAnnotations_val"),
-                );
-                const cluster = {
-                    apiVersion: "elasticsearch.k8s.elastic.co/v1",
-                    kind: "Elasticsearch",
-                    metadata: {
-                        name: formData.get("clusterName") || "elasticsearch",
-                    },
-                    spec: { version: formData.get("version") || "9.0.0" },
-                };
-                const ns = formData.get("namespace")?.trim();
-                if (ns) cluster.metadata.namespace = ns;
-                if (clusterLabels) cluster.metadata.labels = clusterLabels;
-                if (clusterAnnotations)
-                    cluster.metadata.annotations = clusterAnnotations;
-                const img = formData.get("image")?.trim();
-                if (img) cluster.spec.image = img;
-                const rcse = formData.get("remoteClusterServer")?.trim();
-                if (rcse)
-                    cluster.spec.remoteClusterServer = {
-                        enabled: rcse === "true",
-                    };
-                const rcsIdxs = [...formData.keys()]
-                    .filter((k) => k.startsWith("remoteClusters["))
-                    .map((k) => parseInt(k.split("[")[1]))
-                    .filter((v, i, a) => a.indexOf(v) === i);
-                if (rcsIdxs.length) {
-                    cluster.spec.remoteClusters = [];
-                    rcsIdxs.forEach((idx) => {
-                        const name = formData
-                            .get(`remoteClusters[${idx}][name]`)
-                            ?.trim();
-                        const namespace = formData
-                            .get(`remoteClusters[${idx}][namespace]`)
-                            ?.trim();
-                        if (name)
-                            cluster.spec.remoteClusters.push({
-                                elasticsearchRef: { name, namespace },
-                            });
-                    });
-                }
-                const ssSecret = formData.get("secureSettingsSecret")?.trim();
-                if (ssSecret)
-                    cluster.spec.secureSettings = [{ secretName: ssSecret }];
-                const pdbMaxU = formData.get("pdbMaxUnavailable")?.trim();
-                const pdbMinA = formData.get("pdbMinAvailable")?.trim();
-                const pdbSelText = formData.get("pdbSelector")?.trim();
-                if (pdbMaxU || pdbMinA || pdbSelText) {
-                    cluster.spec.podDisruptionBudget = { spec: {} };
-                    if (pdbMaxU)
-                        cluster.spec.podDisruptionBudget.spec.maxUnavailable =
-                            pdbMaxU;
-                    if (pdbMinA)
-                        cluster.spec.podDisruptionBudget.spec.minAvailable =
-                            pdbMinA;
-                    if (pdbSelText)
-                        cluster.spec.podDisruptionBudget.spec.selector =
-                            safeYamlLoad(pdbSelText);
-                }
-                const maxSurge = formData.get("updateMaxSurge")?.trim();
-                const maxUnavailable = formData
-                    .get("updateMaxUnavailable")
-                    ?.trim();
-                if (maxSurge || maxUnavailable) {
-                    cluster.spec.updateStrategy = { changeBudget: {} };
-                    if (maxSurge)
-                        cluster.spec.updateStrategy.changeBudget.maxSurge =
-                            parseInt(maxSurge);
-                    if (maxUnavailable)
-                        cluster.spec.updateStrategy.changeBudget.maxUnavailable =
-                            parseInt(maxUnavailable);
-                }
-                const extraYaml = (formData.get("extraYaml") || "").trim();
-                if (extraYaml)
-                    Object.assign(cluster.spec, safeYamlLoad(extraYaml) || {});
-                const indices = [
-                    ...new Set(
-                        [...formData.keys()]
-                            .filter((k) => k.startsWith("nodeSets["))
-                            .map((k) => parseInt(k.split("[")[1])),
-                    ),
-                ].sort((a, b) => a - b);
-                const nodeSets = [];
-                indices.forEach((idx) => {
-                    const nsLabels = kvPairsToDict(
-                        formData.getAll(`ns${idx}_labels_key`),
-                        formData.getAll(`ns${idx}_labels_val`),
-                    );
-                    const nsAnno = kvPairsToDict(
-                        formData.getAll(`ns${idx}_annotations_key`),
-                        formData.getAll(`ns${idx}_annotations_val`),
-                    );
-                    const nsSel = kvPairsToDict(
-                        formData.getAll(`ns${idx}_nodeSelector_key`),
-                        formData.getAll(`ns${idx}_nodeSelector_val`),
-                    );
-                    const envVars = kvPairsToEnv(
-                        formData.getAll(`ns${idx}_env_key`),
-                        formData.getAll(`ns${idx}_env_val`),
-                    );
-                    const roles = formData.getAll(`nodeSets[${idx}][roles]`);
-                    const nsObj = {
-                        name: formData.get(`nodeSets[${idx}][name]`),
-                        count: parseInt(
-                            formData.get(`nodeSets[${idx}][count]`) || "1",
-                        ),
-                        config: { "node.roles": roles },
-                    };
-                    const extraCfg = (
-                        formData.get(`nodeSets[${idx}][configYaml]`) || ""
-                    ).trim();
-                    if (extraCfg)
-                        Object.assign(
-                            nsObj.config,
-                            safeYamlLoad(extraCfg) || {},
-                        );
-                    const podMeta = {},
-                        podSpec = {};
-                    if (nsLabels) podMeta.labels = nsLabels;
-                    if (nsAnno) podMeta.annotations = nsAnno;
-                    if (nsSel) podSpec.nodeSelector = nsSel;
-                    const cpuReq = formData
-                        .get(`nodeSets[${idx}][cpuRequest]`)
-                        ?.trim();
-                    const cpuLim = formData
-                        .get(`nodeSets[${idx}][cpuLimit]`)
-                        ?.trim();
-                    const memReq = formData
-                        .get(`nodeSets[${idx}][memRequest]`)
-                        ?.trim();
-                    const memLim = formData
-                        .get(`nodeSets[${idx}][memLimit]`)
-                        ?.trim();
-                    if (cpuReq || cpuLim || memReq || memLim) {
-                        const resources = {};
-                        if (cpuReq || memReq) {
-                            resources.requests = {};
-                            if (cpuReq) resources.requests.cpu = cpuReq;
-                            if (memReq) resources.requests.memory = memReq;
-                        }
-                        if (cpuLim || memLim) {
-                            resources.limits = {};
-                            if (cpuLim) resources.limits.cpu = cpuLim;
-                            if (memLim) resources.limits.memory = memLim;
-                        }
-                        podSpec.containers = podSpec.containers || [{}];
-                        podSpec.containers[0].resources = {
-                            ...podSpec.containers[0].resources,
-                            ...resources,
-                        };
-                    }
-                    if (envVars) {
-                        podSpec.containers = podSpec.containers || [{}];
-                        podSpec.containers[0].env = envVars;
-                    }
-                    if (
-                        Object.keys(podMeta).length ||
-                        Object.keys(podSpec).length
-                    ) {
-                        nsObj.podTemplate = {};
-                        if (Object.keys(podMeta).length)
-                            nsObj.podTemplate.metadata = podMeta;
-                        if (Object.keys(podSpec).length)
-                            nsObj.podTemplate.spec = podSpec;
-                    }
-                    const storageClass = formData
-                        .get(`nodeSets[${idx}][storageClass]`)
-                        ?.trim();
-                    const storageSize = formData
-                        .get(`nodeSets[${idx}][storageSize]`)
-                        ?.trim();
-                    if (storageClass || storageSize) {
-                        nsObj.volumeClaimTemplates = [
-                            {
-                                metadata: { name: "elasticsearch-data" },
-                                spec: {
-                                    accessModes: ["ReadWriteOnce"],
-                                    resources: {
-                                        requests: {
-                                            storage: storageSize || "30Gi",
-                                        },
-                                    },
-                                    storageClassName: storageClass || null,
-                                },
-                            },
-                        ];
-                    }
-                    nodeSets.push(nsObj);
+function generateYAMLFromForm(formData) {
+    const clusterLabels = kvPairsToDict(
+        formData.getAll("clusterLabels_key"),
+        formData.getAll("clusterLabels_val"),
+    );
+    const clusterAnnotations = kvPairsToDict(
+        formData.getAll("clusterAnnotations_key"),
+        formData.getAll("clusterAnnotations_val"),
+    );
+    const cluster = {
+        apiVersion: "elasticsearch.k8s.elastic.co/v1",
+        kind: "Elasticsearch",
+        metadata: {
+            name: formData.get("clusterName") || "elasticsearch",
+        },
+        spec: { version: formData.get("version") || "9.0.0" },
+    };
+    const ns = formData.get("namespace")?.trim();
+    if (ns) cluster.metadata.namespace = ns;
+    if (clusterLabels) cluster.metadata.labels = clusterLabels;
+    if (clusterAnnotations) cluster.metadata.annotations = clusterAnnotations;
+    const img = formData.get("image")?.trim();
+    if (img) cluster.spec.image = img;
+    const rcse = formData.get("remoteClusterServer")?.trim();
+    if (rcse) cluster.spec.remoteClusterServer = { enabled: rcse === "true" };
+    // ✅ Remote Clusters only if non-empty
+    const rcsIdxs = [...formData.keys()]
+        .filter((k) => k.startsWith("remoteClusters["))
+        .map((k) => parseInt(k.split("[")[1]))
+        .filter((v, i, a) => a.indexOf(v) === i);
+    if (rcsIdxs.length) {
+        const rcsArray = [];
+        rcsIdxs.forEach((idx) => {
+            const name = formData.get(`remoteClusters[${idx}][name]`)?.trim();
+            const namespace = formData.get(`remoteClusters[${idx}][namespace]`)?.trim();
+            if (name) {
+                rcsArray.push({
+                    elasticsearchRef: { name, namespace }
                 });
-                cluster.spec.nodeSets = nodeSets;
-                return jsyaml.dump(cluster, { sortKeys: false });
             }
+        });
+        if (rcsArray.length) {
+            cluster.spec.remoteClusters = rcsArray;
+        }
+    }
+    const ssSecret = formData.get("secureSettingsSecret")?.trim();
+    if (ssSecret) cluster.spec.secureSettings = [{ secretName: ssSecret }];
+    const pdbMaxU = formData.get("pdbMaxUnavailable")?.trim();
+    const pdbMinA = formData.get("pdbMinAvailable")?.trim();
+    const pdbSelText = formData.get("pdbSelector")?.trim();
+    if (pdbMaxU || pdbMinA || pdbSelText) {
+        cluster.spec.podDisruptionBudget = { spec: {} };
+        if (pdbMaxU) cluster.spec.podDisruptionBudget.spec.maxUnavailable = pdbMaxU;
+        if (pdbMinA) cluster.spec.podDisruptionBudget.spec.minAvailable = pdbMinA;
+        if (pdbSelText) cluster.spec.podDisruptionBudget.spec.selector = safeYamlLoad(pdbSelText);
+    }
+    const maxSurge = formData.get("updateMaxSurge")?.trim();
+    const maxUnavailable = formData.get("updateMaxUnavailable")?.trim();
+    if (maxSurge || maxUnavailable) {
+        cluster.spec.updateStrategy = { changeBudget: {} };
+        if (maxSurge) cluster.spec.updateStrategy.changeBudget.maxSurge = parseInt(maxSurge);
+        if (maxUnavailable) cluster.spec.updateStrategy.changeBudget.maxUnavailable = parseInt(maxUnavailable);
+    }
+    const extraYaml = (formData.get("extraYaml") || "").trim();
+    if (extraYaml) Object.assign(cluster.spec, safeYamlLoad(extraYaml) || {});
+    const indices = [
+        ...new Set(
+            [...formData.keys()]
+                .filter((k) => k.startsWith("nodeSets["))
+                .map((k) => parseInt(k.split("[")[1])),
+        ),
+    ].sort((a, b) => a - b);
+    const nodeSets = [];
+    indices.forEach((idx) => {
+        const nsLabels = kvPairsToDict(
+            formData.getAll(`ns${idx}_labels_key`),
+            formData.getAll(`ns${idx}_labels_val`),
+        );
+        const nsAnno = kvPairsToDict(
+            formData.getAll(`ns${idx}_annotations_key`),
+            formData.getAll(`ns${idx}_annotations_val`),
+        );
+        const nsSel = kvPairsToDict(
+            formData.getAll(`ns${idx}_nodeSelector_key`),
+            formData.getAll(`ns${idx}_nodeSelector_val`),
+        );
+        const envVars = kvPairsToEnv(
+            formData.getAll(`ns${idx}_env_key`),
+            formData.getAll(`ns${idx}_env_val`),
+        );
+        const roles = formData.getAll(`nodeSets[${idx}][roles]`);
+        const nsObj = {
+            name: formData.get(`nodeSets[${idx}][name]`),
+            count: parseInt(formData.get(`nodeSets[${idx}][count]`) || "1"),
+            config: { "node.roles": roles },
+        };
+        const extraCfg = (formData.get(`nodeSets[${idx}][configYaml]`) || "").trim();
+        if (extraCfg) Object.assign(nsObj.config, safeYamlLoad(extraCfg) || {});
+        const podMeta = {}, podSpec = {};
+        if (nsLabels) podMeta.labels = nsLabels;
+        if (nsAnno) podMeta.annotations = nsAnno;
+        if (nsSel) podSpec.nodeSelector = nsSel;
+        const cpuReq = formData.get(`nodeSets[${idx}][cpuRequest]`)?.trim();
+        const cpuLim = formData.get(`nodeSets[${idx}][cpuLimit]`)?.trim();
+        const memReq = formData.get(`nodeSets[${idx}][memRequest]`)?.trim();
+        const memLim = formData.get(`nodeSets[${idx}][memLimit]`)?.trim();
+        if (cpuReq || cpuLim || memReq || memLim) {
+            const resources = {};
+            if (cpuReq || memReq) {
+                resources.requests = {};
+                if (cpuReq) resources.requests.cpu = cpuReq;
+                if (memReq) resources.requests.memory = memReq;
+            }
+            if (cpuLim || memLim) {
+                resources.limits = {};
+                if (cpuLim) resources.limits.cpu = cpuLim;
+                if (memLim) resources.limits.memory = memLim;
+            }
+            podSpec.containers = podSpec.containers || [{}];
+            podSpec.containers[0].resources = {
+                ...podSpec.containers[0].resources,
+                ...resources,
+            };
+        }
+        if (envVars) {
+            podSpec.containers = podSpec.containers || [{}];
+            podSpec.containers[0].env = envVars;
+        }
+        if (Object.keys(podMeta).length || Object.keys(podSpec).length) {
+            nsObj.podTemplate = {};
+            if (Object.keys(podMeta).length) nsObj.podTemplate.metadata = podMeta;
+            if (Object.keys(podSpec).length) nsObj.podTemplate.spec = podSpec;
+        }
+        const storageClass = formData.get(`nodeSets[${idx}][storageClass]`)?.trim();
+        const storageSize = formData.get(`nodeSets[${idx}][storageSize]`)?.trim();
+        if (storageClass || storageSize) {
+            nsObj.volumeClaimTemplates = [
+                {
+                    metadata: { name: "elasticsearch-data" },
+                    spec: {
+                        accessModes: ["ReadWriteOnce"],
+                        resources: {
+                            requests: {
+                                storage: storageSize || "30Gi",
+                            },
+                        },
+                        storageClassName: storageClass || null,
+                    },
+                },
+            ];
+        }
+        nodeSets.push(nsObj);
+    });
+    cluster.spec.nodeSets = nodeSets;
+    return jsyaml.dump(cluster, {
+        sortKeys: false,
+        indent: 2,
+        noArrayIndent: true
+    });
+}
             function copyYAML() {
                 const yamlText =
                     document.getElementById("yaml-output-text").innerText;
@@ -516,7 +477,7 @@
         </script>
     </head>
     <body>
-        <h1>ECK Cluster YAML Generator</h1>
+        <h1>ECK Elasticsearch Cluster YAML Generator</h1>
         <form id="cluster-form">
             <div class="container">
                 <h2>Cluster-wide Settings</h2>
