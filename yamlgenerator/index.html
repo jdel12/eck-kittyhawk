@@ -217,7 +217,7 @@
   <label>Extra Config (YAML)</label>
   <textarea name="nodeSets[${idx}][configYaml]">${data.configYaml || ""}</textarea>
   <details>
-    <summary>⚙️ Advanced NodeSet Settings</summary>
+    <summary>Advanced NodeSet Settings</summary>
     <label>Labels</label>
     <div id="ns${idx}_labels"></div>
     <button type="button" class="add-btn" onclick="addKVRow('ns${idx}_labels')">+ Add Label</button>
@@ -504,7 +504,7 @@ function generateYAMLFromForm(formData) {
                 <label>Extra Cluster Config (YAML)</label
                 ><textarea name="extraYaml"></textarea>
                 <details>
-                    <summary>⚙️ Advanced Cluster Settings</summary>
+                    <summary>Advanced Cluster Settings</summary>
                     <label>Labels</label>
                     <div id="clusterLabels"></div>
                     <button
