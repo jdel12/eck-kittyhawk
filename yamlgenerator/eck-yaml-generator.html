@@ -5,22 +5,34 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <style>
             body {
-                background: #101c3f;
-                font-family: Roboto, sans-serif;
-                color: white;
+                background: #153385;
+                font-family: system-ui;
+                color: #333;
                 margin: 0;
             }
+            h1 {
+                text-align: center;
+                color: #f4f6f8;
+                margin: 20px 0;
+            }
             .container {
-                max-width: 900px;
-                margin: 20px auto;
-                background: rgba(255, 255, 255, 0.05);
+                background: white;
                 padding: 20px;
+                margin: 20px auto;
                 border-radius: 8px;
+                max-width: 900px;
+                box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
+            }
+            h2,
+            h3 {
+                color: #333;
+                margin-top: 0;
             }
             label {
                 display: block;
                 margin-bottom: 6px;
                 font-size: 0.95em;
+                font-weight: 500;
             }
             input,
             select,
@@ -29,34 +41,51 @@
                 width: 100%;
                 padding: 8px;
                 margin-bottom: 12px;
-                border: none;
-                border-radius: 4px;
+                border-radius: 5px;
+                border: 1px solid #ccc;
                 font-size: 1em;
-                background: #1b2b5a;
-                color: white;
+                background: #fff;
                 box-sizing: border-box;
+                transition:
+                    border-color 0.2s ease,
+                    background-color 0.2s ease;
             }
-            input::placeholder,
-            textarea::placeholder {
-                color: #bbb;
+            input:focus,
+            select:focus,
+            textarea:focus {
+                border-color: #0366d6;
+                outline: none;
+                background: #fefefe;
             }
             button {
-                background: #4caf50;
                 cursor: pointer;
+                border: none;
+                font-weight: 500;
+                transition:
+                    background-color 0.2s ease,
+                    transform 0.1s ease;
+            }
+            button:hover {
+                transform: translateY(-1px);
             }
             .remove-btn {
-                background: #e63946;
+                background: #f44336;
+                color: white;
             }
             .copy-btn {
                 background: #ff9800;
-                margin-right: 6px;
+                color: white;
             }
-            pre {
-                background: #0d172f;
-                padding: 15px;
-                border-radius: 6px;
-                overflow-x: auto;
-                white-space: pre-wrap;
+            .add-btn {
+                background: #e0e0e0;
+                color: #333;
+            }
+            button.primary {
+                background-color: #0366d6;
+                color: white;
+            }
+            button.primary:hover {
+                background-color: #0353b6;
             }
             .kv-pair {
                 display: flex;
@@ -75,15 +104,6 @@
                 font-size: 16px;
                 text-align: center;
             }
-            .add-btn {
-                background: #555;
-                margin-bottom: 10px;
-            }
-            details summary {
-                cursor: pointer;
-                font-weight: bold;
-                margin-bottom: 12px;
-            }
             .roles-group {
                 display: flex;
                 flex-wrap: wrap;
@@ -94,9 +114,46 @@
                 display: flex;
                 align-items: center;
                 gap: 4px;
-                background: rgba(255, 255, 255, 0.05);
+                background: #f7f7f7;
                 padding: 4px 6px;
                 border-radius: 4px;
+            }
+            .remote-cluster {
+                border: 1px dashed #ccc;
+                padding: 8px;
+                margin-bottom: 8px;
+                border-radius: 4px;
+                background: #fafafa;
+            }
+            pre {
+                background: #1e1e1e;
+                color: #dcdcdc;
+                font-size: 0.9em;
+                border-radius: 6px;
+                padding: 15px;
+                white-space: pre-wrap;
+                overflow-x: auto;
+            }
+            /* Accordion style for details */
+            details {
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                padding: 6px 10px;
+                background: #fafafa;
+                margin-bottom: 12px;
+            }
+            details summary {
+                cursor: pointer;
+                font-weight: 600;
+            }
+            @media (min-width: 768px) {
+                .form-row {
+                    display: flex;
+                    gap: 10px;
+                }
+                .form-row > div {
+                    flex: 1;
+                }
             }
         </style>
         <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
@@ -117,64 +174,73 @@
             function addKVRow(containerId, keyVal = { key: "", val: "" }) {
                 const container = document.getElementById(containerId);
                 const div = document.createElement("div");
+                let keyPH = "Key";
+                let valPH = "Value";
+                if (containerId.includes("_env")) {
+                    keyPH = "ES_JAVA_OPTS";
+                    valPH = "-Xms2g -Xmx2g";
+                }
                 div.className = "kv-pair";
+                div.innerHTML = `<input name="${containerId}_key" placeholder="${keyPH}" value="${keyVal.key}" />
+  <input name="${containerId}_val" placeholder="${valPH}" value="${keyVal.val}" />
+  <button type="button" class="remove-btn" onclick="this.parentNode.remove()">x</button>`;
+                container.appendChild(div);
+            }
+            function addRemoteCluster(data = { name: "", namespace: "" }) {
+                const container = document.getElementById("remoteClusters");
+                const idx =
+                    container.querySelectorAll(".remote-cluster").length;
+                const div = document.createElement("div");
+                div.className = "remote-cluster";
                 div.innerHTML = `
-                    <input name="${containerId}_key" placeholder="Key" value="${keyVal.key}" />
-                    <input name="${containerId}_val" placeholder="Value" value="${keyVal.val}" />
-                    <button type="button" class="remove-btn" onclick="this.parentNode.remove()">x</button>
-                `;
+    <label>Remote Cluster Name</label>
+    <input name="remoteClusters[${idx}][name]" value="${data.name}">
+    <label>Remote Cluster Namespace</label>
+    <input name="remoteClusters[${idx}][namespace]" value="${data.namespace}">
+    <button type="button" class="remove-btn" onclick="this.parentNode.remove()">Remove</button>
+  `;
                 container.appendChild(div);
             }
             function addNodeSet(data) {
                 const idx = document.querySelectorAll(".nodeSet").length;
                 const container = document.getElementById("nodesets-container");
                 const htmlBlock = `
-                <div class="nodeSet">
-                  <label>NodeSet Name</label>
-                  <input name="nodeSets[${idx}][name]" value="${data.name || ""}" required />
-                  <label>Node Count</label>
-                  <input type="number" min="1" name="nodeSets[${idx}][count]" value="${data.count || 1}" required />
-                  <label>Node Roles</label>
-                  <div class="roles-group">
-                    ${ALL_ROLES.map(
-                        (r) =>
-                            `<label><input type="checkbox" name="nodeSets[${idx}][roles]" value="${r}" ${
-                                data.roles && data.roles.includes(r)
-                                    ? "checked"
-                                    : ""
-                            }> ${r}</label>`,
-                    ).join("")}
-                  </div>
-                  <label>Extra Config (YAML)</label>
-                  <textarea name="nodeSets[${idx}][configYaml]">${data.configYaml || ""}</textarea>
-                  <details>
-                    <summary>Advanced NodeSet Settings</summary>
-                    <label>Labels</label>
-                    <div id="ns${idx}_labels"></div>
-                    <button type="button" class="add-btn" onclick="addKVRow('ns${idx}_labels')">+ Add Label</button>
-                    <label>Annotations</label>
-                    <div id="ns${idx}_annotations"></div>
-                    <button type="button" class="add-btn" onclick="addKVRow('ns${idx}_annotations')">+ Add Annotation</button>
-                    <label>Node Selector</label>
-                    <div id="ns${idx}_nodeSelector"></div>
-                    <button type="button" class="add-btn" onclick="addKVRow('ns${idx}_nodeSelector')">+ Add Selector</button>
-                    <label>CPU Request</label>
-                    <input name="nodeSets[${idx}][cpuRequest]" placeholder="500m" />
-                    <label>CPU Limit</label>
-                    <input name="nodeSets[${idx}][cpuLimit]" placeholder="1" />
-                    <label>Memory Request</label>
-                    <input name="nodeSets[${idx}][memRequest]" placeholder="2Gi" />
-                    <label>Memory Limit</label>
-                    <input name="nodeSets[${idx}][memLimit]" placeholder="4Gi" />
-                    <label>Storage Class</label>
-                    <input name="nodeSets[${idx}][storageClass]" placeholder="standard" />
-                    <label>Storage Size</label>
-                    <input name="nodeSets[${idx}][storageSize]" placeholder="30Gi" />
-                    <label>Environment Variables (YAML)</label>
-                    <textarea name="nodeSets[${idx}][env]" placeholder="- name: ES_JAVA_OPTS\n  value: -Xms2g -Xmx2g"></textarea>
-                  </details>
-                  <button type="button" class="remove-btn" onclick="this.closest('.nodeSet').remove()">Remove NodeSet</button>
-                </div>`;
+<div class="nodeSet">
+  <label>NodeSet Name</label>
+  <input name="nodeSets[${idx}][name]" value="${data.name || ""}" required />
+  <label>Node Count</label>
+  <input type="number" min="1" name="nodeSets[${idx}][count]" value="${data.count || 1}" required />
+  <label>Node Roles</label>
+  <div class="roles-group">
+    ${ALL_ROLES.map((r) => `<label><input type="checkbox" name="nodeSets[${idx}][roles]" value="${r}" ${data.roles && data.roles.includes(r) ? "checked" : ""}> ${r}</label>`).join("")}
+  </div>
+  <label>Extra Config (YAML)</label>
+  <textarea name="nodeSets[${idx}][configYaml]">${data.configYaml || ""}</textarea>
+  <details>
+    <summary>⚙️ Advanced NodeSet Settings</summary>
+    <label>Labels</label>
+    <div id="ns${idx}_labels"></div>
+    <button type="button" class="add-btn" onclick="addKVRow('ns${idx}_labels')">+ Add Label</button>
+    <label>Annotations</label>
+    <div id="ns${idx}_annotations"></div>
+    <button type="button" class="add-btn" onclick="addKVRow('ns${idx}_annotations')">+ Add Annotation</button>
+    <label>Node Selector</label>
+    <div id="ns${idx}_nodeSelector"></div>
+    <button type="button" class="add-btn" onclick="addKVRow('ns${idx}_nodeSelector')">+ Add Selector</button>
+    <h3>Resources</h3>
+    <label>CPU Request</label><input name="nodeSets[${idx}][cpuRequest]" placeholder="2" />
+    <label>CPU Limit</label><input name="nodeSets[${idx}][cpuLimit]" placeholder="4" />
+    <label>Memory Request</label><input name="nodeSets[${idx}][memRequest]" placeholder="2Gi" />
+    <label>Memory Limit</label><input name="nodeSets[${idx}][memLimit]" placeholder="4Gi" />
+    <h3>Storage</h3>
+    <label>Storage Class</label><input name="nodeSets[${idx}][storageClass]" placeholder="standard" />
+    <label>Storage Size</label><input name="nodeSets[${idx}][storageSize]" placeholder="30Gi" />
+    <label>Container Environment Variables</label>
+    <div id="ns${idx}_env"></div>
+    <button type="button" class="add-btn" onclick="addKVRow('ns${idx}_env')">+ Add Environmental Variable</button>
+  </details>
+  <button type="button" class="remove-btn" onclick="this.closest('.nodeSet').remove()">Remove NodeSet</button>
+</div>`;
                 container.insertAdjacentHTML("beforeend", htmlBlock);
             }
             function kvPairsToDict(keys, vals) {
@@ -184,6 +250,15 @@
                     if (key) out[key] = (vals[i] || "").trim();
                 });
                 return Object.keys(out).length ? out : null;
+            }
+            function kvPairsToEnv(keys, vals) {
+                const out = [];
+                keys.forEach((k, i) => {
+                    const key = k.trim();
+                    if (key)
+                        out.push({ name: key, value: (vals[i] || "").trim() });
+                });
+                return out.length ? out : null;
             }
             function safeYamlLoad(s) {
                 if (!s || !s.trim()) return null;
@@ -202,10 +277,6 @@
                     formData.getAll("clusterAnnotations_key"),
                     formData.getAll("clusterAnnotations_val"),
                 );
-                const clusterSelector = kvPairsToDict(
-                    formData.getAll("clusterNodeSelector_key"),
-                    formData.getAll("clusterNodeSelector_val"),
-                );
                 const cluster = {
                     apiVersion: "elasticsearch.k8s.elastic.co/v1",
                     kind: "Elasticsearch",
@@ -214,11 +285,68 @@
                     },
                     spec: { version: formData.get("version") || "9.0.0" },
                 };
+                const ns = formData.get("namespace")?.trim();
+                if (ns) cluster.metadata.namespace = ns;
                 if (clusterLabels) cluster.metadata.labels = clusterLabels;
                 if (clusterAnnotations)
                     cluster.metadata.annotations = clusterAnnotations;
-                if (clusterSelector)
-                    cluster.spec.nodeSelector = clusterSelector;
+                const img = formData.get("image")?.trim();
+                if (img) cluster.spec.image = img;
+                const rcse = formData.get("remoteClusterServer")?.trim();
+                if (rcse)
+                    cluster.spec.remoteClusterServer = {
+                        enabled: rcse === "true",
+                    };
+                const rcsIdxs = [...formData.keys()]
+                    .filter((k) => k.startsWith("remoteClusters["))
+                    .map((k) => parseInt(k.split("[")[1]))
+                    .filter((v, i, a) => a.indexOf(v) === i);
+                if (rcsIdxs.length) {
+                    cluster.spec.remoteClusters = [];
+                    rcsIdxs.forEach((idx) => {
+                        const name = formData
+                            .get(`remoteClusters[${idx}][name]`)
+                            ?.trim();
+                        const namespace = formData
+                            .get(`remoteClusters[${idx}][namespace]`)
+                            ?.trim();
+                        if (name)
+                            cluster.spec.remoteClusters.push({
+                                elasticsearchRef: { name, namespace },
+                            });
+                    });
+                }
+                const ssSecret = formData.get("secureSettingsSecret")?.trim();
+                if (ssSecret)
+                    cluster.spec.secureSettings = [{ secretName: ssSecret }];
+                const pdbMaxU = formData.get("pdbMaxUnavailable")?.trim();
+                const pdbMinA = formData.get("pdbMinAvailable")?.trim();
+                const pdbSelText = formData.get("pdbSelector")?.trim();
+                if (pdbMaxU || pdbMinA || pdbSelText) {
+                    cluster.spec.podDisruptionBudget = { spec: {} };
+                    if (pdbMaxU)
+                        cluster.spec.podDisruptionBudget.spec.maxUnavailable =
+                            pdbMaxU;
+                    if (pdbMinA)
+                        cluster.spec.podDisruptionBudget.spec.minAvailable =
+                            pdbMinA;
+                    if (pdbSelText)
+                        cluster.spec.podDisruptionBudget.spec.selector =
+                            safeYamlLoad(pdbSelText);
+                }
+                const maxSurge = formData.get("updateMaxSurge")?.trim();
+                const maxUnavailable = formData
+                    .get("updateMaxUnavailable")
+                    ?.trim();
+                if (maxSurge || maxUnavailable) {
+                    cluster.spec.updateStrategy = { changeBudget: {} };
+                    if (maxSurge)
+                        cluster.spec.updateStrategy.changeBudget.maxSurge =
+                            parseInt(maxSurge);
+                    if (maxUnavailable)
+                        cluster.spec.updateStrategy.changeBudget.maxUnavailable =
+                            parseInt(maxUnavailable);
+                }
                 const extraYaml = (formData.get("extraYaml") || "").trim();
                 if (extraYaml)
                     Object.assign(cluster.spec, safeYamlLoad(extraYaml) || {});
@@ -243,9 +371,13 @@
                         formData.getAll(`ns${idx}_nodeSelector_key`),
                         formData.getAll(`ns${idx}_nodeSelector_val`),
                     );
+                    const envVars = kvPairsToEnv(
+                        formData.getAll(`ns${idx}_env_key`),
+                        formData.getAll(`ns${idx}_env_val`),
+                    );
                     const roles = formData.getAll(`nodeSets[${idx}][roles]`);
-                    const ns = {
-                        name: formData.get(`nodeSets[${idx}][name]`) || "",
+                    const nsObj = {
+                        name: formData.get(`nodeSets[${idx}][name]`),
                         count: parseInt(
                             formData.get(`nodeSets[${idx}][count]`) || "1",
                         ),
@@ -255,24 +387,27 @@
                         formData.get(`nodeSets[${idx}][configYaml]`) || ""
                     ).trim();
                     if (extraCfg)
-                        Object.assign(ns.config, safeYamlLoad(extraCfg) || {});
-                    const podMeta = {};
-                    const podSpec = {};
+                        Object.assign(
+                            nsObj.config,
+                            safeYamlLoad(extraCfg) || {},
+                        );
+                    const podMeta = {},
+                        podSpec = {};
                     if (nsLabels) podMeta.labels = nsLabels;
                     if (nsAnno) podMeta.annotations = nsAnno;
                     if (nsSel) podSpec.nodeSelector = nsSel;
-                    const cpuReq = (
-                        formData.get(`nodeSets[${idx}][cpuRequest]`) || ""
-                    ).trim();
-                    const cpuLim = (
-                        formData.get(`nodeSets[${idx}][cpuLimit]`) || ""
-                    ).trim();
-                    const memReq = (
-                        formData.get(`nodeSets[${idx}][memRequest]`) || ""
-                    ).trim();
-                    const memLim = (
-                        formData.get(`nodeSets[${idx}][memLimit]`) || ""
-                    ).trim();
+                    const cpuReq = formData
+                        .get(`nodeSets[${idx}][cpuRequest]`)
+                        ?.trim();
+                    const cpuLim = formData
+                        .get(`nodeSets[${idx}][cpuLimit]`)
+                        ?.trim();
+                    const memReq = formData
+                        .get(`nodeSets[${idx}][memRequest]`)
+                        ?.trim();
+                    const memLim = formData
+                        .get(`nodeSets[${idx}][memLimit]`)
+                        ?.trim();
                     if (cpuReq || cpuLim || memReq || memLim) {
                         const resources = {};
                         if (cpuReq || memReq) {
@@ -291,21 +426,28 @@
                             ...resources,
                         };
                     }
-                    const envVars = safeYamlLoad(
-                        formData.get(`nodeSets[${idx}][env]`) || "",
-                    );
                     if (envVars) {
                         podSpec.containers = podSpec.containers || [{}];
                         podSpec.containers[0].env = envVars;
                     }
-                    const storageClass = (
-                        formData.get(`nodeSets[${idx}][storageClass]`) || ""
-                    ).trim();
-                    const storageSize = (
-                        formData.get(`nodeSets[${idx}][storageSize]`) || ""
-                    ).trim();
+                    if (
+                        Object.keys(podMeta).length ||
+                        Object.keys(podSpec).length
+                    ) {
+                        nsObj.podTemplate = {};
+                        if (Object.keys(podMeta).length)
+                            nsObj.podTemplate.metadata = podMeta;
+                        if (Object.keys(podSpec).length)
+                            nsObj.podTemplate.spec = podSpec;
+                    }
+                    const storageClass = formData
+                        .get(`nodeSets[${idx}][storageClass]`)
+                        ?.trim();
+                    const storageSize = formData
+                        .get(`nodeSets[${idx}][storageSize]`)
+                        ?.trim();
                     if (storageClass || storageSize) {
-                        ns.volumeClaimTemplates = [
+                        nsObj.volumeClaimTemplates = [
                             {
                                 metadata: { name: "elasticsearch-data" },
                                 spec: {
@@ -320,17 +462,7 @@
                             },
                         ];
                     }
-                    if (
-                        Object.keys(podMeta).length ||
-                        Object.keys(podSpec).length
-                    ) {
-                        ns.podTemplate = {};
-                        if (Object.keys(podMeta).length)
-                            ns.podTemplate.metadata = podMeta;
-                        if (Object.keys(podSpec).length)
-                            ns.podTemplate.spec = podSpec;
-                    }
-                    nodeSets.push(ns);
+                    nodeSets.push(nsObj);
                 });
                 cluster.spec.nodeSets = nodeSets;
                 return jsyaml.dump(cluster, { sortKeys: false });
@@ -355,23 +487,16 @@
                 document.body.removeChild(link);
             }
             document.addEventListener("DOMContentLoaded", () => {
-                [
-                    "clusterLabels",
-                    "clusterAnnotations",
-                    "clusterNodeSelector",
-                ].forEach((id) => addKVRow(id));
+                ["clusterLabels", "clusterAnnotations"].forEach((id) =>
+                    addKVRow(id),
+                );
+                addRemoteCluster();
                 addNodeSet({
                     name: "newnodeset",
                     count: 1,
                     roles: ["master", "data", "ingest"],
                     configYaml: "",
                 });
-                document
-                    .querySelector('.container button[onclick^="addNodeSet"]')
-                    .setAttribute(
-                        "onclick",
-                        `addNodeSet({name:"newnodeset",count:1,roles:["master","data","ingest"],configYaml:""})`,
-                    );
                 document
                     .getElementById("cluster-form")
                     .addEventListener("submit", (e) => {
@@ -381,28 +506,44 @@
                         document.getElementById(
                             "yaml-output-container",
                         ).innerHTML = `
-                        <h3>YAML Output</h3>
-                        <button class='copy-btn' type='button' onclick='copyYAML()'>Copy YAML</button>
-                        <button class='button' type='button' onclick='downloadYAML()'>Download YAML</button>
-                        <pre id='yaml-output-text'>${yamlStr}</pre>
-                    `;
+      <h3>YAML Output</h3>
+      <button class='copy-btn' type='button' onclick='copyYAML()'>Copy YAML</button>
+      <button class='primary' type='button' onclick='downloadYAML()'>Download YAML</button>
+      <pre id='yaml-output-text'>${yamlStr}</pre>
+    `;
                     });
             });
         </script>
     </head>
     <body>
-        <h1 style="text-align: center">ECK Cluster YAML Generator</h1>
+        <h1>ECK Cluster YAML Generator</h1>
         <form id="cluster-form">
             <div class="container">
                 <h2>Cluster-wide Settings</h2>
-                <label>Cluster Name</label>
-                <input name="clusterName" value="elasticsearch" required />
-                <label>Version</label>
-                <input name="version" value="9.0.0" required />
-                <label>Extra Cluster Config (YAML)</label>
-                <textarea name="extraYaml"></textarea>
+                <div class="form-row">
+                    <div>
+                        <label>Cluster Name</label
+                        ><input
+                            name="clusterName"
+                            value="elasticsearch"
+                            required
+                        />
+                    </div>
+                    <div>
+                        <label>Namespace</label
+                        ><input name="namespace" placeholder="default" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div>
+                        <label>Version</label
+                        ><input name="version" value="9.0.0" required />
+                    </div>
+                </div>
+                <label>Extra Cluster Config (YAML)</label
+                ><textarea name="extraYaml"></textarea>
                 <details>
-                    <summary>Advanced Cluster Settings</summary>
+                    <summary>⚙️ Advanced Cluster Settings</summary>
                     <label>Labels</label>
                     <div id="clusterLabels"></div>
                     <button
@@ -421,14 +562,43 @@
                     >
                         + Add Annotation
                     </button>
-                    <label>Node Selector</label>
-                    <div id="clusterNodeSelector"></div>
+                    <label>Image</label
+                    ><input
+                        name="image"
+                        placeholder="docker.elastic.co/elasticsearch/elasticsearch:9.0.0"
+                    />
+                    <label>Secure Settings Secret Name</label
+                    ><input
+                        name="secureSettingsSecret"
+                        placeholder="my-secret"
+                    />
+                    <label>Pod Disruption Budget - Max Unavailable</label
+                    ><input name="pdbMaxUnavailable" placeholder="1" />
+                    <label>Pod Disruption Budget - Min Available</label
+                    ><input name="pdbMinAvailable" placeholder="1" />
+                    <label>Pod Disruption Budget Selector (YAML)</label>
+                    <textarea
+                        name="pdbSelector"
+                        placeholder="matchLabels:
+  elasticsearch.k8s.elastic.co/cluster-name: quickstart"
+                    ></textarea>
+                    <label>Update Strategy ChangeBudget - Max Surge</label
+                    ><input name="updateMaxSurge" placeholder="1" />
+                    <label>Update Strategy ChangeBudget - Max Unavailable</label
+                    ><input name="updateMaxUnavailable" placeholder="1" />
+                    <label>Remote Cluster Server Enabled</label>
+                    <select name="remoteClusterServer">
+                        <option value="">-- Select --</option>
+                        <option value="true">true</option>
+                        <option value="false">false</option>
+                    </select>
+                    <div id="remoteClusters"></div>
                     <button
                         type="button"
                         class="add-btn"
-                        onclick="addKVRow('clusterNodeSelector')"
+                        onclick="addRemoteCluster()"
                     >
-                        + Add Selector
+                        + Add Remote Cluster
                     </button>
                 </details>
             </div>
@@ -437,18 +607,16 @@
                 <div id="nodesets-container"></div>
                 <button
                     type="button"
+                    class="add-btn"
                     onclick='addNodeSet({name:"hot",count:1,roles:["master"],configYaml:""})'
                 >
                     + Add NodeSet
                 </button>
             </div>
             <div class="container">
-                <button type="submit" style="background: #2196f3">
-                    Generate YAML
-                </button>
+                <button type="submit" class="primary">Generate YAML</button>
             </div>
         </form>
         <div class="container" id="yaml-output-container"></div>
     </body>
 </html>
-
